@@ -1024,11 +1024,13 @@ function Navbar() {
     className: "hidden sm:inline font-bold"
   }, cartSubtotal > 0 ? formatPrice(cartSubtotal) : "Carrito")), /*#__PURE__*/React.createElement("button", {
     onClick: () => setIsAdminOpen(true),
-    className: "h-11 w-11 flex items-center justify-center rounded-xl bg-stone-50 border border-stone-200 text-stone-500 hover:text-stone-900 hover:bg-stone-100 transition-all shadow-sm shrink-0 cursor-pointer",
-    title: "Panel de Administración Salem"
+    className: "h-11 px-3 flex items-center justify-center gap-1.5 rounded-xl bg-pink-50 border border-pink-200 text-pink-700 hover:bg-pink-100 hover:text-pink-800 transition-all shadow-sm shrink-0 cursor-pointer text-xs font-bold",
+    title: "Panel de Configuración de la Tienda (Prendas, Colecciones, Contacto, Pagos)"
   }, /*#__PURE__*/React.createElement(Icons.Settings, {
-    className: "w-4 h-4"
-  })))), searchOpen && /*#__PURE__*/React.createElement("div", {
+    className: "w-4 h-4 text-pink-600"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "hidden md:inline"
+  }, "Admin")))), searchOpen && /*#__PURE__*/React.createElement("div", {
     className: "md:hidden py-3 border-t border-[#E8E1D5] animate-fade-in"
   }, /*#__PURE__*/React.createElement("div", {
     className: "relative"
@@ -1062,14 +1064,22 @@ function Navbar() {
     onClick: () => navigateToCategory(cat.id),
     className: "block w-full text-left px-3 py-2 rounded-lg font-semibold text-stone-800 hover:bg-pink-50"
   }, cat.label)), /*#__PURE__*/React.createElement("div", {
-    className: "pt-2 border-t border-stone-200"
+    className: "pt-2 border-t border-stone-200 space-y-2"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       setIsWholesaleModalOpen(true);
       setMobileMenuOpen(false);
     },
     className: "w-full text-center py-2.5 bg-pink-100 text-pink-800 font-bold rounded-xl text-sm"
-  }, "Venta Mayorista (Combos & Curvas) 📦")))));
+  }, "Venta Mayorista (Combos & Curvas) 📦"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setIsAdminOpen(true);
+      setMobileMenuOpen(false);
+    },
+    className: "w-full text-center py-2.5 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2"
+  }, /*#__PURE__*/React.createElement(Icons.Settings, {
+    className: "w-4 h-4 text-pink-400"
+  }), /*#__PURE__*/React.createElement("span", null, "⚙️ Panel Administrador (Configurar Tienda)"))))));
 }
 
 // --- SECCIÓN HERO PRINCIPAL ---
@@ -2715,6 +2725,7 @@ function AdminModal() {
   const [tab, setTab] = useState("products");
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [isNewProduct, setIsNewProduct] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
 
   // Formulario de edición / creación de prenda
   const [productForm, setProductForm] = useState({
@@ -2898,6 +2909,91 @@ function AdminModal() {
       type: "success"
     });
   };
+
+  // AGREGAR NUEVA COLECCIÓN
+  const handleAddCategory = e => {
+    e.preventDefault();
+    if (!newCategoryName.trim()) {
+      addToast({
+        title: "Falta el nombre",
+        description: "Escribí el nombre de la colección.",
+        type: "error"
+      });
+      return;
+    }
+    const cleanId = newCategoryName.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+    if (settings.categories.some(c => c.id === cleanId)) {
+      addToast({
+        title: "Ya existe",
+        description: "Ya existe una colección con ese nombre o ID.",
+        type: "error"
+      });
+      return;
+    }
+    const updated = [...settings.categories, {
+      id: cleanId,
+      label: newCategoryName.trim(),
+      icon: "Sparkles"
+    }];
+    setSettings({
+      ...settings,
+      categories: updated
+    });
+    setNewCategoryName("");
+    addToast({
+      title: "¡Colección agregada con éxito! ✨",
+      description: `"${newCategoryName}" ya está activa en el menú, navbar y catálogo.`,
+      type: "success"
+    });
+  };
+
+  // ELIMINAR COLECCIÓN
+  const handleDeleteCategory = (catId, catLabel) => {
+    if (confirm(`¿Estás segura de eliminar la colección "${catLabel}" del menú y la tienda?`)) {
+      const updated = settings.categories.filter(c => c.id !== catId);
+      setSettings({
+        ...settings,
+        categories: updated
+      });
+      addToast({
+        title: "Colección eliminada",
+        description: `Se quitó "${catLabel}".`,
+        type: "info"
+      });
+    }
+  };
+
+  // DESCARGAR CONFIG.JS
+  const handleExportConfigFile = () => {
+    const code = "// Configuración General - Jeans SLM ✨ | Indumentaria Salem 🐈‍⬛\nwindow.SALEM_CONFIG = " + JSON.stringify(settings, null, 2) + ";\n";
+    const blob = new Blob([code], {
+      type: "application/javascript;charset=utf-8"
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "config.js";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    addToast({
+      title: "¡Archivo config.js descargado! 📥",
+      description: "Guardalo en la carpeta 'data/config.js' para que quede fijo para siempre.",
+      type: "success"
+    });
+  };
+
+  // COPIAR CONFIGURACIÓN AL PORTAPAPELES
+  const handleCopyConfigCode = () => {
+    const code = "// Configuración General - Jeans SLM ✨ | Indumentaria Salem 🐈‍⬛\nwindow.SALEM_CONFIG = " + JSON.stringify(settings, null, 2) + ";\n";
+    navigator.clipboard.writeText(code);
+    addToast({
+      title: "¡Configuración copiada! 📋",
+      description: "Copiada al portapapeles con éxito.",
+      type: "success"
+    });
+  };
   const handleResetDefaults = () => {
     if (confirm("¿Estás seguro de restablecer todos los productos y configuraciones a los valores iniciales?")) {
       localStorage.removeItem("salem_products");
@@ -2936,17 +3032,23 @@ function AdminModal() {
   }, /*#__PURE__*/React.createElement(Icons.X, {
     className: "w-5 h-5"
   }))), /*#__PURE__*/React.createElement("div", {
-    className: "flex border-b border-stone-200 gap-4 text-xs font-bold text-stone-500 mb-5"
+    className: "flex border-b border-stone-200 gap-2 sm:gap-4 text-xs font-bold text-stone-500 mb-5 overflow-x-auto pb-1 scrollbar-none"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => setTab("products"),
-    className: `pb-2.5 transition-colors ${tab === "products" ? "text-pink-600 border-b-2 border-pink-600" : "hover:text-stone-900"}`
-  }, "👗 Catálogo de Prendas (", products.length, ")"), /*#__PURE__*/React.createElement("button", {
+    className: `pb-2.5 whitespace-nowrap transition-colors cursor-pointer ${tab === "products" ? "text-pink-600 border-b-2 border-pink-600 font-extrabold" : "hover:text-stone-900"}`
+  }, "👗 Prendas (", products.length, ")"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setTab("categories"),
+    className: `pb-2.5 whitespace-nowrap transition-colors cursor-pointer ${tab === "categories" ? "text-pink-600 border-b-2 border-pink-600 font-extrabold" : "hover:text-stone-900"}`
+  }, "🏷️ Colecciones (", settings.categories.length, ")"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setTab("contact"),
+    className: `pb-2.5 whitespace-nowrap transition-colors cursor-pointer ${tab === "contact" ? "text-pink-600 border-b-2 border-pink-600 font-extrabold" : "hover:text-stone-900"}`
+  }, "📞 Contacto & Redes"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setTab("payments"),
+    className: `pb-2.5 whitespace-nowrap transition-colors cursor-pointer ${tab === "payments" ? "text-pink-600 border-b-2 border-pink-600 font-extrabold" : "hover:text-stone-900"}`
+  }, "💳 Pagos & Banco"), /*#__PURE__*/React.createElement("button", {
     onClick: () => setTab("orders"),
-    className: `pb-2.5 transition-colors ${tab === "orders" ? "text-pink-600 border-b-2 border-pink-600" : "hover:text-stone-900"}`
-  }, "📦 Pedidos Realizados (", orders.length, ")"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => setTab("settings"),
-    className: `pb-2.5 transition-colors ${tab === "settings" ? "text-pink-600 border-b-2 border-pink-600" : "hover:text-stone-900"}`
-  }, "⚙️ Ajustes Comerciales (WhatsApp, Envíos)")), tab === "products" && /*#__PURE__*/React.createElement("div", {
+    className: `pb-2.5 whitespace-nowrap transition-colors cursor-pointer ${tab === "orders" ? "text-pink-600 border-b-2 border-pink-600 font-extrabold" : "hover:text-stone-900"}`
+  }, "📦 Pedidos (", orders.length, ")")), tab === "products" && /*#__PURE__*/React.createElement("div", {
     className: "space-y-4"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex flex-wrap items-center justify-between gap-3 p-3 bg-pink-50/70 border border-pink-200/60 rounded-2xl"
@@ -3034,13 +3136,91 @@ function AdminModal() {
     className: "text-emerald-700 font-bold"
   }, o.status))))) : /*#__PURE__*/React.createElement("p", {
     className: "text-xs text-stone-500 text-center py-12"
-  }, "No hay pedidos registrados todavía.")), tab === "settings" && /*#__PURE__*/React.createElement("div", {
+  }, "No hay pedidos registrados todavía.")), tab === "categories" && /*#__PURE__*/React.createElement("div", {
+    className: "space-y-5 text-xs"
+  }, /*#__PURE__*/React.createElement("form", {
+    onSubmit: handleAddCategory,
+    className: "p-4 bg-pink-50/70 border border-pink-200/80 rounded-2xl"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "font-bold text-pink-900 block mb-1"
+  }, "➕ Crear Nueva Colección para el Menú y Catálogo"), /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px] text-pink-700 mb-3"
+  }, "Escribí el nombre y automáticamente se creará el botón en el Nav superior, en el menú móvil y en el pie de página."), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col sm:flex-row gap-2"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    placeholder: "Ej: Colección Invierno ❄️, Drops 2026, Bikinis...",
+    value: newCategoryName,
+    onChange: e => setNewCategoryName(e.target.value),
+    className: "flex-1 bg-white border border-stone-300 rounded-xl px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-pink-500 font-medium"
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "submit",
+    className: "salem-gradient-btn text-white font-bold px-4 py-2 rounded-xl shadow-md shrink-0 cursor-pointer"
+  }, "➕ Agregar al Menú"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+    className: "font-bold text-stone-800 block mb-2"
+  }, "Colecciones Actuales en tu Tienda (", settings.categories.length, ")"), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[42vh] overflow-y-auto pr-1"
+  }, settings.categories.map(cat => /*#__PURE__*/React.createElement("div", {
+    key: cat.id,
+    className: "p-3 rounded-xl border border-stone-200 bg-[#FAF7F2] flex items-center justify-between gap-2"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+    className: "font-bold text-stone-900 block text-xs"
+  }, cat.label), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-stone-500 font-mono"
+  }, "ID: ", cat.id)), cat.id !== "all" ? /*#__PURE__*/React.createElement("button", {
+    onClick: () => handleDeleteCategory(cat.id, cat.label),
+    className: "p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer",
+    title: "Eliminar esta colección del menú"
+  }, /*#__PURE__*/React.createElement(Icons.Trash2, {
+    className: "w-4 h-4"
+  })) : /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-stone-400 font-semibold px-2 py-0.5 bg-stone-100 rounded"
+  }, "Principal"))))), /*#__PURE__*/React.createElement("div", {
+    className: "pt-4 border-t border-stone-200 flex flex-wrap items-center justify-between gap-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: handleExportConfigFile,
+    className: "bg-stone-900 hover:bg-stone-800 text-white font-bold px-3 py-2 rounded-xl text-[11px] flex items-center gap-1.5 cursor-pointer",
+    title: "Descargar archivo config.js"
+  }, /*#__PURE__*/React.createElement("span", null, "📥 Descargar config.js")), /*#__PURE__*/React.createElement("button", {
+    onClick: handleCopyConfigCode,
+    className: "bg-white hover:bg-stone-100 border border-stone-300 text-stone-700 font-bold px-2.5 py-2 rounded-xl text-[11px] flex items-center gap-1 cursor-pointer"
+  }, /*#__PURE__*/React.createElement(Icons.Copy, {
+    className: "w-3.5 h-3.5"
+  }), /*#__PURE__*/React.createElement("span", null, "Copiar"))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setIsAdminOpen(false);
+      addToast({
+        title: "Colecciones guardadas",
+        description: "Los cambios ya son visibles en la tienda.",
+        type: "success"
+      });
+    },
+    className: "salem-gradient-btn text-white font-bold px-5 py-2.5 rounded-xl shadow-md cursor-pointer"
+  }, "Guardar y Cerrar"))), tab === "contact" && /*#__PURE__*/React.createElement("div", {
     className: "space-y-4 text-xs"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-1 sm:grid-cols-2 gap-4"
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold text-stone-700 block mb-1"
-  }, "Enlace directo a tu WhatsApp de Ventas"), /*#__PURE__*/React.createElement("input", {
+  }, "WhatsApp Teléfono Visible"), /*#__PURE__*/React.createElement("input", {
     type: "text",
-    value: settings.whatsappUrl,
+    placeholder: "+54 9 11 5834-9210",
+    value: settings.whatsappPhone || "",
+    onChange: e => setSettings({
+      ...settings,
+      whatsappPhone: e.target.value
+    }),
+    className: "w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-stone-400 mt-0.5 block"
+  }, "Se muestra en el footer y en la barra superior.")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold text-stone-700 block mb-1"
+  }, "Enlace Directo de WhatsApp"), /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    placeholder: "https://wa.me/message/MKBUYHXSKDTQK1 o https://wa.me/5491158349210",
+    value: settings.whatsappUrl || "",
     onChange: e => setSettings({
       ...settings,
       whatsappUrl: e.target.value
@@ -3048,64 +3228,225 @@ function AdminModal() {
     className: "w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 font-mono text-xs"
   }), /*#__PURE__*/React.createElement("span", {
     className: "text-[10px] text-stone-400 mt-0.5 block"
-  }, "Ejemplo: https://wa.me/message/MKBUYHXSKDTQK1 o https://wa.me/5491122334455")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
-    className: "font-bold text-stone-700 block mb-1"
-  }, "Usuario de Instagram (@jeans_slm)"), /*#__PURE__*/React.createElement("input", {
-    type: "text",
-    value: settings.instagramUser,
-    onChange: e => setSettings({
-      ...settings,
-      instagramUser: e.target.value,
-      instagramUrl: `https://www.instagram.com/${e.target.value}/`
-    }),
-    className: "w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs"
-  })), /*#__PURE__*/React.createElement("div", {
+  }, "Donde llegarán los pedidos con 1 clic."))), /*#__PURE__*/React.createElement("div", {
     className: "grid grid-cols-1 sm:grid-cols-2 gap-4"
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold text-stone-700 block mb-1"
-  }, "Umbral de Envío Gratis ($ ARS)"), /*#__PURE__*/React.createElement("input", {
-    type: "number",
-    value: settings.freeShippingThreshold,
-    onChange: e => setSettings({
-      ...settings,
-      freeShippingThreshold: parseInt(e.target.value) || 0
-    }),
+  }, "Usuario de Instagram (@jeans_slm)"), /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    placeholder: "jeans_slm",
+    value: settings.instagramUser || "",
+    onChange: e => {
+      const u = e.target.value.replace("@", "");
+      setSettings({
+        ...settings,
+        instagramUser: u,
+        instagramUrl: `https://www.instagram.com/${u}/`
+      });
+    },
     className: "w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs"
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold text-stone-700 block mb-1"
-  }, "Cupón Activo en la Barra"), /*#__PURE__*/React.createElement("input", {
+  }, "Email de Atención al Cliente"), /*#__PURE__*/React.createElement("input", {
+    type: "email",
+    placeholder: "contacto@indumentariasalem.com.ar",
+    value: settings.supportEmail || "",
+    onChange: e => setSettings({
+      ...settings,
+      supportEmail: e.target.value
+    }),
+    className: "w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs"
+  }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold text-stone-700 block mb-1"
+  }, "Dirección del Showroom / Retiros"), /*#__PURE__*/React.createElement("input", {
     type: "text",
-    value: settings.announcementCoupon,
+    placeholder: "Showroom Palermo Soho, CABA • Envíos a todo el país",
+    value: settings.showroomAddress || "",
+    onChange: e => setSettings({
+      ...settings,
+      showroomAddress: e.target.value
+    }),
+    className: "w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-stone-400 mt-0.5 block"
+  }, "Se muestra en la columna de contacto del footer.")), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-stone-200"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold text-stone-700 block mb-1"
+  }, "Cupón Activo en la Barra Superior"), /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    value: settings.announcementCoupon || "",
     onChange: e => setSettings({
       ...settings,
       announcementCoupon: e.target.value.toUpperCase()
     }),
     className: "w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs uppercase font-bold"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold text-stone-700 block mb-1"
+  }, "Monto para Envío Gratis ($ ARS)"), /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    value: settings.freeShippingThreshold || 0,
+    onChange: e => setSettings({
+      ...settings,
+      freeShippingThreshold: parseInt(e.target.value) || 0
+    }),
+    className: "w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs"
   }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold text-stone-700 block mb-1"
-  }, "Texto de la Barra Superior de Anuncios"), /*#__PURE__*/React.createElement("input", {
+  }, "Texto de Anuncios de la Barra Superior"), /*#__PURE__*/React.createElement("input", {
     type: "text",
-    value: settings.announcementText,
+    value: settings.announcementText || "",
     onChange: e => setSettings({
       ...settings,
       announcementText: e.target.value
     }),
     className: "w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs"
   })), /*#__PURE__*/React.createElement("div", {
-    className: "pt-4 border-t border-stone-200 flex justify-between items-center"
+    className: "pt-4 border-t border-stone-200 flex flex-wrap items-center justify-between gap-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2"
   }, /*#__PURE__*/React.createElement("button", {
-    onClick: handleResetDefaults,
-    className: "text-rose-600 hover:text-rose-800 font-bold underline cursor-pointer"
-  }, "Restablecer a valores de fábrica"), /*#__PURE__*/React.createElement("button", {
+    onClick: handleExportConfigFile,
+    className: "bg-stone-900 hover:bg-stone-800 text-white font-bold px-3 py-2 rounded-xl text-[11px] flex items-center gap-1.5 cursor-pointer"
+  }, /*#__PURE__*/React.createElement("span", null, "📥 Descargar config.js")), /*#__PURE__*/React.createElement("button", {
+    onClick: handleCopyConfigCode,
+    className: "bg-white hover:bg-stone-100 border border-stone-300 text-stone-700 font-bold px-2.5 py-2 rounded-xl text-[11px] flex items-center gap-1 cursor-pointer"
+  }, /*#__PURE__*/React.createElement(Icons.Copy, {
+    className: "w-3.5 h-3.5"
+  }), /*#__PURE__*/React.createElement("span", null, "Copiar"))), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       setIsAdminOpen(false);
       addToast({
-        title: "Configuración guardada",
-        description: "Cambios aplicados con éxito.",
+        title: "Contacto guardado",
+        description: "Datos actualizados en el footer y la web.",
         type: "success"
       });
     },
-    className: "salem-gradient-btn text-white font-bold px-5 py-2.5 rounded-xl shadow-md"
+    className: "salem-gradient-btn text-white font-bold px-5 py-2.5 rounded-xl shadow-md cursor-pointer"
+  }, "Guardar y Cerrar"))), tab === "payments" && /*#__PURE__*/React.createElement("div", {
+    className: "space-y-4 text-xs"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "p-3.5 bg-pink-50/70 border border-pink-200/80 rounded-2xl text-[11px] text-pink-900"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "font-bold block mb-0.5"
+  }, "💳 Configuración de Cobro por Transferencia"), "Estos datos son los que verán tus clientas al elegir pagar por Transferencia Bancaria en el checkout."), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-1 sm:grid-cols-2 gap-4"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold text-stone-700 block mb-1"
+  }, "Alias de Transferencia (Mercado Pago o Banco)"), /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    placeholder: "Ej: SALEM.INDUMENTARIA.MP",
+    value: settings.bankDetails && settings.bankDetails.alias || "",
+    onChange: e => setSettings({
+      ...settings,
+      bankDetails: {
+        ...(settings.bankDetails || {}),
+        alias: e.target.value.toUpperCase()
+      }
+    }),
+    className: "w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs font-bold text-stone-900"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold text-stone-700 block mb-1"
+  }, "CBU / CVU"), /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    placeholder: "0070123400000012345678",
+    value: settings.bankDetails && settings.bankDetails.cbu || "",
+    onChange: e => setSettings({
+      ...settings,
+      bankDetails: {
+        ...(settings.bankDetails || {}),
+        cbu: e.target.value
+      }
+    }),
+    className: "w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 font-mono text-xs"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-1 sm:grid-cols-2 gap-4"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold text-stone-700 block mb-1"
+  }, "Nombre del Titular de la Cuenta"), /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    placeholder: "Ej: Indumentaria Salem / Lucas Ibañez",
+    value: settings.bankDetails && settings.bankDetails.holder || "",
+    onChange: e => setSettings({
+      ...settings,
+      bankDetails: {
+        ...(settings.bankDetails || {}),
+        holder: e.target.value
+      }
+    }),
+    className: "w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold text-stone-700 block mb-1"
+  }, "Banco o Billetera"), /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    placeholder: "Ej: Mercado Pago / Banco Galicia",
+    value: settings.bankDetails && settings.bankDetails.bank || "",
+    onChange: e => setSettings({
+      ...settings,
+      bankDetails: {
+        ...(settings.bankDetails || {}),
+        bank: e.target.value
+      }
+    }),
+    className: "w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-stone-200"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold text-stone-700 block mb-1"
+  }, "Descuento por Transferencia (%)"), /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    value: settings.bankTransferDiscount || 15,
+    onChange: e => setSettings({
+      ...settings,
+      bankTransferDiscount: parseInt(e.target.value) || 0
+    }),
+    className: "w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs font-bold"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-stone-400 mt-0.5 block"
+  }, "Se descuenta en el checkout (ej: 15%).")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold text-stone-700 block mb-1"
+  }, "Máximo de Cuotas sin Interés"), /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    value: settings.maxInstallments || 6,
+    onChange: e => setSettings({
+      ...settings,
+      maxInstallments: parseInt(e.target.value) || 1
+    }),
+    className: "w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs font-bold"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-stone-400 mt-0.5 block"
+  }, "Muestra las cuotas (ej: 6).")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold text-stone-700 block mb-1"
+  }, "Tipo de Cambio USD ($ ARS)"), /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    value: settings.usdExchangeRate || 1280,
+    onChange: e => setSettings({
+      ...settings,
+      usdExchangeRate: parseInt(e.target.value) || 1000
+    }),
+    className: "w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs font-bold"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-stone-400 mt-0.5 block"
+  }, "Para el conversor de moneda."))), /*#__PURE__*/React.createElement("div", {
+    className: "pt-4 border-t border-stone-200 flex flex-wrap items-center justify-between gap-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: handleExportConfigFile,
+    className: "bg-stone-900 hover:bg-stone-800 text-white font-bold px-3 py-2 rounded-xl text-[11px] flex items-center gap-1.5 cursor-pointer"
+  }, /*#__PURE__*/React.createElement("span", null, "📥 Descargar config.js")), /*#__PURE__*/React.createElement("button", {
+    onClick: handleResetDefaults,
+    className: "text-rose-600 hover:text-rose-800 font-bold underline text-[11px] cursor-pointer ml-2"
+  }, "Restablecer de fábrica")), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setIsAdminOpen(false);
+      addToast({
+        title: "Datos de cobro guardados",
+        description: "Los datos de transferencia ya están activos en el checkout.",
+        type: "success"
+      });
+    },
+    className: "salem-gradient-btn text-white font-bold px-5 py-2.5 rounded-xl shadow-md cursor-pointer"
   }, "Guardar y Cerrar"))), productModalOpen && /*#__PURE__*/React.createElement("div", {
     className: "fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-fade-in"
   }, /*#__PURE__*/React.createElement("div", {
@@ -3159,19 +3500,10 @@ function AdminModal() {
       category: e.target.value
     }),
     className: "w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs font-bold"
-  }, /*#__PURE__*/React.createElement("option", {
-    value: "jeans"
-  }, "Jeans & Denim"), /*#__PURE__*/React.createElement("option", {
-    value: "corsets"
-  }, "Corsets & Tops"), /*#__PURE__*/React.createElement("option", {
-    value: "camperas"
-  }, "Camperas & Abrigos"), /*#__PURE__*/React.createElement("option", {
-    value: "faldas"
-  }, "Faldas & Conjuntos"), /*#__PURE__*/React.createElement("option", {
-    value: "pantalones"
-  }, "Pantalones & Bermudas"), /*#__PURE__*/React.createElement("option", {
-    value: "accesorios"
-  }, "Accesorios & Strass"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+  }, settings.categories.filter(c => c.id !== "all").map(c => /*#__PURE__*/React.createElement("option", {
+    key: c.id,
+    value: c.id
+  }, c.label)))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold text-stone-700 block mb-1"
   }, "Stock Disponible"), /*#__PURE__*/React.createElement("input", {
     type: "number",
@@ -3373,7 +3705,8 @@ function Footer() {
     setIsLegalModalOpen,
     setLegalTab,
     setSelectedCategory,
-    setCurrentView
+    setCurrentView,
+    setIsAdminOpen
   } = useStore();
   const handleOpenLegal = tab => {
     setLegalTab(tab);
@@ -3487,13 +3820,16 @@ function Footer() {
   }, "Andreani")))), /*#__PURE__*/React.createElement("div", {
     className: "pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-stone-500"
   }, /*#__PURE__*/React.createElement("p", null, "© ", new Date().getFullYear(), " Jeans SLM ✨ • Indumentaria Salem. Todos los derechos reservados."), /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center gap-4"
+    className: "flex items-center gap-3 sm:gap-4 flex-wrap justify-center"
   }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setIsAdminOpen(true),
+    className: "text-pink-400 hover:text-pink-300 font-bold flex items-center gap-1 cursor-pointer bg-stone-900 px-2.5 py-1 rounded-lg border border-pink-500/30"
+  }, "⚙️ Admin Tienda"), /*#__PURE__*/React.createElement("span", null, "•"), /*#__PURE__*/React.createElement("button", {
     onClick: () => handleOpenLegal("terms"),
-    className: "hover:text-stone-300"
+    className: "hover:text-stone-300 cursor-pointer"
   }, "Privacidad"), /*#__PURE__*/React.createElement("span", null, "•"), /*#__PURE__*/React.createElement("button", {
     onClick: () => handleOpenLegal("shipping"),
-    className: "hover:text-stone-300"
+    className: "hover:text-stone-300 cursor-pointer"
   }, "Defensa del Consumidor")))));
 }
 
