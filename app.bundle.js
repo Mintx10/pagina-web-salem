@@ -970,16 +970,11 @@ function Navbar() {
       });
     },
     className: "h-11 px-3.5 flex items-center justify-center whitespace-nowrap rounded-xl hover:text-pink-600 hover:bg-stone-50 transition-all cursor-pointer"
-  }, "Catálogo"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => navigateToCategory("jeans"),
-    className: `h-11 px-3.5 flex items-center justify-center whitespace-nowrap rounded-xl transition-all cursor-pointer ${selectedCategory === "jeans" && currentView === "catalog" ? "bg-pink-50 text-pink-700 font-extrabold border border-pink-200 shadow-sm" : "hover:text-pink-600 hover:bg-stone-50"}`
-  }, "Jeans & Denim"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => navigateToCategory("corsets"),
-    className: `h-11 px-3.5 flex items-center justify-center whitespace-nowrap rounded-xl transition-all cursor-pointer ${selectedCategory === "corsets" && currentView === "catalog" ? "bg-pink-50 text-pink-700 font-extrabold border border-pink-200 shadow-sm" : "hover:text-pink-600 hover:bg-stone-50"}`
-  }, "Corsets & Tops"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => navigateToCategory("camperas"),
-    className: `h-11 px-3.5 flex items-center justify-center whitespace-nowrap rounded-xl transition-all cursor-pointer ${selectedCategory === "camperas" && currentView === "catalog" ? "bg-pink-50 text-pink-700 font-extrabold border border-pink-200 shadow-sm" : "hover:text-pink-600 hover:bg-stone-50"}`
-  }, "Camperas"), /*#__PURE__*/React.createElement("button", {
+  }, "Catálogo"), settings.categories.filter(c => c.id !== "all").slice(0, 5).map(cat => /*#__PURE__*/React.createElement("button", {
+    key: cat.id,
+    onClick: () => navigateToCategory(cat.id),
+    className: `h-11 px-3.5 flex items-center justify-center whitespace-nowrap rounded-xl transition-all cursor-pointer ${selectedCategory === cat.id && currentView === "catalog" ? "bg-pink-50 text-pink-700 font-extrabold border border-pink-200 shadow-sm" : "hover:text-pink-600 hover:bg-stone-50"}`
+  }, cat.label)), /*#__PURE__*/React.createElement("button", {
     onClick: () => setIsWholesaleModalOpen(true),
     className: "h-11 px-3.5 flex items-center justify-center gap-1.5 rounded-xl bg-pink-50/90 hover:bg-pink-100 text-pink-800 border border-pink-200/80 transition-all whitespace-nowrap cursor-pointer shadow-sm"
   }, /*#__PURE__*/React.createElement("span", null, "Mayorista"), /*#__PURE__*/React.createElement("span", {
@@ -1062,22 +1057,11 @@ function Navbar() {
   }, "Inicio"), /*#__PURE__*/React.createElement("button", {
     onClick: () => navigateToCategory("all"),
     className: "block w-full text-left px-3 py-2 rounded-lg font-semibold text-stone-800 hover:bg-pink-50"
-  }, "Catálogo Completo"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => navigateToCategory("jeans"),
+  }, "Catálogo Completo"), settings.categories.filter(c => c.id !== "all").map(cat => /*#__PURE__*/React.createElement("button", {
+    key: cat.id,
+    onClick: () => navigateToCategory(cat.id),
     className: "block w-full text-left px-3 py-2 rounded-lg font-semibold text-stone-800 hover:bg-pink-50"
-  }, "Jeans & Denim"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => navigateToCategory("corsets"),
-    className: "block w-full text-left px-3 py-2 rounded-lg font-semibold text-stone-800 hover:bg-pink-50"
-  }, "Corsets & Tops"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => navigateToCategory("camperas"),
-    className: "block w-full text-left px-3 py-2 rounded-lg font-semibold text-stone-800 hover:bg-pink-50"
-  }, "Camperas & Abrigos"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => navigateToCategory("faldas"),
-    className: "block w-full text-left px-3 py-2 rounded-lg font-semibold text-stone-800 hover:bg-pink-50"
-  }, "Faldas & Conjuntos"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => navigateToCategory("accesorios"),
-    className: "block w-full text-left px-3 py-2 rounded-lg font-semibold text-stone-800 hover:bg-pink-50"
-  }, "Accesorios & Strass"), /*#__PURE__*/React.createElement("div", {
+  }, cat.label)), /*#__PURE__*/React.createElement("div", {
     className: "pt-2 border-t border-stone-200"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => {
@@ -3435,54 +3419,51 @@ function Footer() {
     className: "font-display font-bold text-white text-sm mb-3"
   }, "Colecciones"), /*#__PURE__*/React.createElement("ul", {
     className: "space-y-2"
-  }, /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("button", {
+  }, settings.categories.filter(c => c.id !== "all").map(cat => /*#__PURE__*/React.createElement("li", {
+    key: cat.id
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: () => {
-      setSelectedCategory("jeans");
+      setSelectedCategory(cat.id);
       setCurrentView("catalog");
+      const el = document.getElementById("catalogo-section");
+      if (el) el.scrollIntoView({
+        behavior: "smooth"
+      });
     },
-    className: "hover:text-pink-400 transition-colors"
-  }, "Jeans & Denim")), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("button", {
-    onClick: () => {
-      setSelectedCategory("corsets");
-      setCurrentView("catalog");
-    },
-    className: "hover:text-pink-400 transition-colors"
-  }, "Corsets & Tops")), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("button", {
-    onClick: () => {
-      setSelectedCategory("camperas");
-      setCurrentView("catalog");
-    },
-    className: "hover:text-pink-400 transition-colors"
-  }, "Camperas & Abrigos")), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("button", {
-    onClick: () => {
-      setSelectedCategory("faldas");
-      setCurrentView("catalog");
-    },
-    className: "hover:text-pink-400 transition-colors"
-  }, "Faldas & Conjuntos")), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("button", {
-    onClick: () => {
-      setSelectedCategory("accesorios");
-      setCurrentView("catalog");
-    },
-    className: "hover:text-pink-400 transition-colors"
-  }, "Medias & Strass")))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h4", {
+    className: "hover:text-pink-400 transition-colors cursor-pointer text-left"
+  }, cat.label))))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h4", {
     className: "font-display font-bold text-white text-sm mb-3"
-  }, "Atención al Cliente"), /*#__PURE__*/React.createElement("ul", {
-    className: "space-y-2"
+  }, "Contacto & Ayuda"), /*#__PURE__*/React.createElement("ul", {
+    className: "space-y-2.5"
   }, /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("a", {
     href: settings.whatsappUrl,
     target: "_blank",
     rel: "noopener noreferrer",
-    className: "hover:text-pink-400"
-  }, "WhatsApp Oficial")), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("button", {
+    className: "flex items-center gap-2 hover:text-pink-400 text-stone-300 font-medium"
+  }, /*#__PURE__*/React.createElement(Icons.MessageCircle, {
+    className: "w-4 h-4 text-emerald-400 shrink-0"
+  }), /*#__PURE__*/React.createElement("span", null, settings.whatsappPhone))), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("a", {
+    href: settings.instagramUrl,
+    target: "_blank",
+    rel: "noopener noreferrer",
+    className: "flex items-center gap-2 hover:text-pink-400 text-stone-300 font-medium"
+  }, /*#__PURE__*/React.createElement(Icons.Instagram, {
+    className: "w-4 h-4 text-pink-400 shrink-0"
+  }), /*#__PURE__*/React.createElement("span", null, "@", settings.instagramUser))), settings.supportEmail && /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("a", {
+    href: `mailto:${settings.supportEmail}`,
+    className: "flex items-center gap-2 hover:text-pink-400 text-stone-400 text-[11px]"
+  }, /*#__PURE__*/React.createElement("span", null, "✉️"), /*#__PURE__*/React.createElement("span", {
+    className: "break-all"
+  }, settings.supportEmail))), settings.showroomAddress && /*#__PURE__*/React.createElement("li", {
+    className: "flex items-start gap-1.5 text-stone-400 text-[11px] pt-1"
+  }, /*#__PURE__*/React.createElement("span", null, "📍"), /*#__PURE__*/React.createElement("span", null, settings.showroomAddress)), /*#__PURE__*/React.createElement("li", {
+    className: "pt-1"
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: () => handleOpenLegal("shipping"),
-    className: "hover:text-pink-400"
+    className: "hover:text-pink-400 text-[11px] block"
   }, "Políticas de Envíos y Cambios")), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("button", {
-    onClick: () => handleOpenLegal("terms"),
-    className: "hover:text-pink-400"
-  }, "Términos del Servicio")), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("button", {
     onClick: () => handleOpenLegal("regret"),
-    className: "text-pink-400 font-bold hover:underline"
+    className: "text-pink-400 font-bold hover:underline text-[11px] block"
   }, "Botón de Arrepentimiento")))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h4", {
     className: "font-display font-bold text-white text-sm mb-3"
   }, "Medios de Pago & Envío"), /*#__PURE__*/React.createElement("p", {

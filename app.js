@@ -670,36 +670,22 @@ function Navbar() {
             >
               Catálogo
             </button>
-            <button
-              onClick={() => navigateToCategory("jeans")}
-              className={`h-11 px-3.5 flex items-center justify-center whitespace-nowrap rounded-xl transition-all cursor-pointer ${
-                selectedCategory === "jeans" && currentView === "catalog"
-                  ? "bg-pink-50 text-pink-700 font-extrabold border border-pink-200 shadow-sm"
-                  : "hover:text-pink-600 hover:bg-stone-50"
-              }`}
-            >
-              Jeans & Denim
-            </button>
-            <button
-              onClick={() => navigateToCategory("corsets")}
-              className={`h-11 px-3.5 flex items-center justify-center whitespace-nowrap rounded-xl transition-all cursor-pointer ${
-                selectedCategory === "corsets" && currentView === "catalog"
-                  ? "bg-pink-50 text-pink-700 font-extrabold border border-pink-200 shadow-sm"
-                  : "hover:text-pink-600 hover:bg-stone-50"
-              }`}
-            >
-              Corsets & Tops
-            </button>
-            <button
-              onClick={() => navigateToCategory("camperas")}
-              className={`h-11 px-3.5 flex items-center justify-center whitespace-nowrap rounded-xl transition-all cursor-pointer ${
-                selectedCategory === "camperas" && currentView === "catalog"
-                  ? "bg-pink-50 text-pink-700 font-extrabold border border-pink-200 shadow-sm"
-                  : "hover:text-pink-600 hover:bg-stone-50"
-              }`}
-            >
-              Camperas
-            </button>
+            {settings.categories
+              .filter((c) => c.id !== "all")
+              .slice(0, 5)
+              .map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => navigateToCategory(cat.id)}
+                  className={`h-11 px-3.5 flex items-center justify-center whitespace-nowrap rounded-xl transition-all cursor-pointer ${
+                    selectedCategory === cat.id && currentView === "catalog"
+                      ? "bg-pink-50 text-pink-700 font-extrabold border border-pink-200 shadow-sm"
+                      : "hover:text-pink-600 hover:bg-stone-50"
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
             <button
               onClick={() => setIsWholesaleModalOpen(true)}
               className="h-11 px-3.5 flex items-center justify-center gap-1.5 rounded-xl bg-pink-50/90 hover:bg-pink-100 text-pink-800 border border-pink-200/80 transition-all whitespace-nowrap cursor-pointer shadow-sm"
@@ -821,36 +807,17 @@ function Navbar() {
             >
               Catálogo Completo
             </button>
-            <button
-              onClick={() => navigateToCategory("jeans")}
-              className="block w-full text-left px-3 py-2 rounded-lg font-semibold text-stone-800 hover:bg-pink-50"
-            >
-              Jeans & Denim
-            </button>
-            <button
-              onClick={() => navigateToCategory("corsets")}
-              className="block w-full text-left px-3 py-2 rounded-lg font-semibold text-stone-800 hover:bg-pink-50"
-            >
-              Corsets & Tops
-            </button>
-            <button
-              onClick={() => navigateToCategory("camperas")}
-              className="block w-full text-left px-3 py-2 rounded-lg font-semibold text-stone-800 hover:bg-pink-50"
-            >
-              Camperas & Abrigos
-            </button>
-            <button
-              onClick={() => navigateToCategory("faldas")}
-              className="block w-full text-left px-3 py-2 rounded-lg font-semibold text-stone-800 hover:bg-pink-50"
-            >
-              Faldas & Conjuntos
-            </button>
-            <button
-              onClick={() => navigateToCategory("accesorios")}
-              className="block w-full text-left px-3 py-2 rounded-lg font-semibold text-stone-800 hover:bg-pink-50"
-            >
-              Accesorios & Strass
-            </button>
+            {settings.categories
+              .filter((c) => c.id !== "all")
+              .map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => navigateToCategory(cat.id)}
+                  className="block w-full text-left px-3 py-2 rounded-lg font-semibold text-stone-800 hover:bg-pink-50"
+                >
+                  {cat.label}
+                </button>
+              ))}
             <div className="pt-2 border-t border-stone-200">
               <button
                 onClick={() => { setIsWholesaleModalOpen(true); setMobileMenuOpen(false); }}
@@ -3680,74 +3647,80 @@ function Footer() {
             </div>
           </div>
 
-          {/* Navegación */}
+          {/* Navegación Colecciones */}
           <div>
             <h4 className="font-display font-bold text-white text-sm mb-3">Colecciones</h4>
             <ul className="space-y-2">
-              <li>
-                <button
-                  onClick={() => { setSelectedCategory("jeans"); setCurrentView("catalog"); }}
-                  className="hover:text-pink-400 transition-colors"
-                >
-                  Jeans & Denim
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => { setSelectedCategory("corsets"); setCurrentView("catalog"); }}
-                  className="hover:text-pink-400 transition-colors"
-                >
-                  Corsets & Tops
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => { setSelectedCategory("camperas"); setCurrentView("catalog"); }}
-                  className="hover:text-pink-400 transition-colors"
-                >
-                  Camperas & Abrigos
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => { setSelectedCategory("faldas"); setCurrentView("catalog"); }}
-                  className="hover:text-pink-400 transition-colors"
-                >
-                  Faldas & Conjuntos
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => { setSelectedCategory("accesorios"); setCurrentView("catalog"); }}
-                  className="hover:text-pink-400 transition-colors"
-                >
-                  Medias & Strass
-                </button>
-              </li>
+              {settings.categories
+                .filter((c) => c.id !== "all")
+                .map((cat) => (
+                  <li key={cat.id}>
+                    <button
+                      onClick={() => {
+                        setSelectedCategory(cat.id);
+                        setCurrentView("catalog");
+                        const el = document.getElementById("catalogo-section");
+                        if (el) el.scrollIntoView({ behavior: "smooth" });
+                      }}
+                      className="hover:text-pink-400 transition-colors cursor-pointer text-left"
+                    >
+                      {cat.label}
+                    </button>
+                  </li>
+                ))}
             </ul>
           </div>
 
-          {/* Atención al cliente */}
+          {/* Contacto y Atención al cliente */}
           <div>
-            <h4 className="font-display font-bold text-white text-sm mb-3">Atención al Cliente</h4>
-            <ul className="space-y-2">
+            <h4 className="font-display font-bold text-white text-sm mb-3">Contacto & Ayuda</h4>
+            <ul className="space-y-2.5">
               <li>
-                <a href={settings.whatsappUrl} target="_blank" rel="noopener noreferrer" className="hover:text-pink-400">
-                  WhatsApp Oficial
+                <a
+                  href={settings.whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 hover:text-pink-400 text-stone-300 font-medium"
+                >
+                  <Icons.MessageCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>{settings.whatsappPhone}</span>
                 </a>
               </li>
               <li>
-                <button onClick={() => handleOpenLegal("shipping")} className="hover:text-pink-400">
+                <a
+                  href={settings.instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 hover:text-pink-400 text-stone-300 font-medium"
+                >
+                  <Icons.Instagram className="w-4 h-4 text-pink-400 shrink-0" />
+                  <span>@{settings.instagramUser}</span>
+                </a>
+              </li>
+              {settings.supportEmail && (
+                <li>
+                  <a
+                    href={`mailto:${settings.supportEmail}`}
+                    className="flex items-center gap-2 hover:text-pink-400 text-stone-400 text-[11px]"
+                  >
+                    <span>✉️</span>
+                    <span className="break-all">{settings.supportEmail}</span>
+                  </a>
+                </li>
+              )}
+              {settings.showroomAddress && (
+                <li className="flex items-start gap-1.5 text-stone-400 text-[11px] pt-1">
+                  <span>📍</span>
+                  <span>{settings.showroomAddress}</span>
+                </li>
+              )}
+              <li className="pt-1">
+                <button onClick={() => handleOpenLegal("shipping")} className="hover:text-pink-400 text-[11px] block">
                   Políticas de Envíos y Cambios
                 </button>
               </li>
               <li>
-                <button onClick={() => handleOpenLegal("terms")} className="hover:text-pink-400">
-                  Términos del Servicio
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleOpenLegal("regret")} className="text-pink-400 font-bold hover:underline">
+                <button onClick={() => handleOpenLegal("regret")} className="text-pink-400 font-bold hover:underline text-[11px] block">
                   Botón de Arrepentimiento
                 </button>
               </li>
