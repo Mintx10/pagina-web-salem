@@ -908,12 +908,12 @@ function Navbar() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center justify-between h-20 gap-3 sm:gap-4"
+    className: "flex items-center justify-between h-16 sm:h-20 gap-3 sm:gap-5"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex items-center lg:hidden"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => setMobileMenuOpen(!mobileMenuOpen),
-    className: "h-11 w-11 flex items-center justify-center rounded-xl bg-stone-50 border border-stone-200 text-stone-700 hover:bg-stone-100 shadow-sm transition-colors"
+    className: "h-10 w-10 sm:h-11 sm:w-11 flex items-center justify-center rounded-xl bg-stone-50 border border-stone-200 text-stone-700 hover:bg-stone-100 shadow-sm transition-colors"
   }, mobileMenuOpen ? /*#__PURE__*/React.createElement(Icons.X, {
     className: "w-5 h-5"
   }) : /*#__PURE__*/React.createElement(Icons.Menu, {
@@ -926,93 +926,65 @@ function Navbar() {
         behavior: "smooth"
       });
     },
-    className: "flex items-center gap-3 cursor-pointer group shrink-0"
+    className: "flex items-center gap-2.5 sm:gap-3 cursor-pointer group shrink-0"
   }, /*#__PURE__*/React.createElement("div", {
     className: "relative"
   }, /*#__PURE__*/React.createElement("img", {
     src: "brand/logo.png",
     alt: "Logo Jeans SLM",
-    className: "w-11 h-11 rounded-full border-2 border-pink-500 shadow-md group-hover:scale-105 transition-transform duration-300 object-cover",
+    className: "w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 border-pink-500 shadow-md group-hover:scale-105 transition-transform duration-300 object-cover",
     onError: e => {
       e.target.onerror = null;
       e.target.src = "salem_logo.png";
     }
   }), /*#__PURE__*/React.createElement("span", {
-    className: "absolute -top-0.5 -right-0.5 w-3 h-3 bg-pink-500 border-2 border-white rounded-full"
+    className: "absolute -top-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-pink-500 border-2 border-white rounded-full"
   })), /*#__PURE__*/React.createElement("div", {
     className: "flex flex-col"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center gap-1.5"
+    className: "flex items-center gap-1 sm:gap-1.5"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "font-display font-black text-xl tracking-tight text-stone-900 group-hover:text-pink-600 transition-colors"
+    className: "font-display font-black text-lg sm:text-xl tracking-tight text-stone-900 group-hover:text-pink-600 transition-colors"
   }, "JEANS SLM"), /*#__PURE__*/React.createElement("span", {
     className: "text-pink-500 text-xs animate-pulse"
   }, "✨")), /*#__PURE__*/React.createElement("span", {
-    className: "text-[11px] font-bold tracking-wider text-pink-600 uppercase -mt-1"
-  }, "Indumentaria Salem 🐈‍⬛"))), /*#__PURE__*/React.createElement("nav", {
-    className: "hidden lg:flex items-center gap-1.5 xl:gap-2 text-xs xl:text-sm font-bold text-stone-700"
-  }, /*#__PURE__*/React.createElement("button", {
-    onClick: () => {
-      setCurrentView("home");
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
-    },
-    className: `h-11 px-3.5 flex items-center justify-center whitespace-nowrap rounded-xl transition-all cursor-pointer ${currentView === "home" ? "bg-pink-50 text-pink-700 font-extrabold border border-pink-200 shadow-sm" : "hover:text-pink-600 hover:bg-stone-50"}`
-  }, "Inicio"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => {
-      setSelectedCategory("all");
-      setCurrentView("catalog");
-      const el = document.getElementById("catalogo-section");
-      if (el) el.scrollIntoView({
-        behavior: "smooth"
-      });
-    },
-    className: "h-11 px-3.5 flex items-center justify-center whitespace-nowrap rounded-xl hover:text-pink-600 hover:bg-stone-50 transition-all cursor-pointer"
-  }, "Catálogo"), settings.categories.filter(c => c.id !== "all").slice(0, 5).map(cat => /*#__PURE__*/React.createElement("button", {
-    key: cat.id,
-    onClick: () => navigateToCategory(cat.id),
-    className: `h-11 px-3.5 flex items-center justify-center whitespace-nowrap rounded-xl transition-all cursor-pointer ${selectedCategory === cat.id && currentView === "catalog" ? "bg-pink-50 text-pink-700 font-extrabold border border-pink-200 shadow-sm" : "hover:text-pink-600 hover:bg-stone-50"}`
-  }, cat.label)), /*#__PURE__*/React.createElement("button", {
-    onClick: () => setIsWholesaleModalOpen(true),
-    className: "h-11 px-3.5 flex items-center justify-center gap-1.5 rounded-xl bg-pink-50/90 hover:bg-pink-100 text-pink-800 border border-pink-200/80 transition-all whitespace-nowrap cursor-pointer shadow-sm"
-  }, /*#__PURE__*/React.createElement("span", null, "Mayorista"), /*#__PURE__*/React.createElement("span", {
-    className: "bg-pink-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider"
-  }, "Combos"))), /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center gap-2 sm:gap-2.5"
+    className: "text-[10px] sm:text-[11px] font-bold tracking-wider text-pink-600 uppercase -mt-1"
+  }, "Indumentaria Salem 🐈‍⬛"))), /*#__PURE__*/React.createElement("div", {
+    className: "hidden md:flex flex-1 max-w-md lg:max-w-lg mx-3 lg:mx-6"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "relative hidden md:flex items-center w-48 lg:w-60 h-11"
+    className: "relative w-full h-11"
   }, /*#__PURE__*/React.createElement("input", {
     type: "text",
-    placeholder: "Buscar jeans, corsets...",
+    placeholder: "Buscar jeans, corsets, camperas, faldas...",
     value: searchQuery,
     onChange: e => setSearchQuery(e.target.value),
-    className: "w-full h-11 bg-stone-50 border border-stone-200 rounded-xl pl-9 pr-8 text-xs font-medium text-stone-900 placeholder-stone-400 focus:bg-white focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-100 shadow-sm transition-all"
+    className: "w-full h-11 bg-stone-50 border border-stone-200 rounded-2xl pl-10 pr-9 text-xs font-medium text-stone-900 placeholder-stone-400 focus:bg-white focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-100 shadow-sm transition-all"
   }), /*#__PURE__*/React.createElement(Icons.Search, {
-    className: "w-4 h-4 text-stone-400 absolute left-3 top-3.5"
+    className: "w-4 h-4 text-stone-400 absolute left-3.5 top-3.5"
   }), searchQuery && /*#__PURE__*/React.createElement("button", {
     onClick: () => setSearchQuery(""),
-    className: "absolute right-2.5 top-3.5 text-stone-400 hover:text-stone-700"
+    className: "absolute right-3 top-3.5 text-stone-400 hover:text-stone-700"
   }, /*#__PURE__*/React.createElement(Icons.X, {
     className: "w-3.5 h-3.5"
-  }))), /*#__PURE__*/React.createElement("button", {
+  })))), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-1.5 sm:gap-2.5 shrink-0"
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: () => setSearchOpen(!searchOpen),
-    className: "md:hidden h-11 w-11 flex items-center justify-center rounded-xl bg-stone-50 border border-stone-200 text-stone-700 hover:bg-stone-100 shadow-sm",
-    title: "Buscar"
+    className: "md:hidden h-10 w-10 sm:h-11 sm:w-11 flex items-center justify-center rounded-xl bg-stone-50 border border-stone-200 text-stone-700 hover:bg-stone-100 shadow-sm",
+    title: "Buscar prendas"
   }, /*#__PURE__*/React.createElement(Icons.Search, {
     className: "w-5 h-5"
   })), /*#__PURE__*/React.createElement("button", {
     onClick: () => setIsWishlistModalOpen(true),
-    className: "relative h-11 w-11 flex items-center justify-center rounded-xl bg-stone-50 border border-stone-200 text-stone-700 hover:bg-pink-50 hover:text-pink-600 hover:border-pink-300 transition-all shadow-sm shrink-0 cursor-pointer",
+    className: "relative h-10 w-10 sm:h-11 sm:w-11 flex items-center justify-center rounded-xl bg-stone-50 border border-stone-200 text-stone-700 hover:bg-pink-50 hover:text-pink-600 hover:border-pink-300 transition-all shadow-sm shrink-0 cursor-pointer",
     title: "Favoritos"
   }, /*#__PURE__*/React.createElement(Icons.Heart, {
-    className: `w-5 h-5 ${wishlist.length > 0 ? "text-pink-500 fill-pink-500" : ""}`
+    className: `w-4 h-4 sm:w-5 sm:h-5 ${wishlist.length > 0 ? "text-pink-500 fill-pink-500" : ""}`
   }), wishlist.length > 0 && /*#__PURE__*/React.createElement("span", {
     className: "absolute -top-1 -right-1 bg-pink-500 text-white font-bold text-[10px] w-4 h-4 rounded-full flex items-center justify-center animate-bounce shadow"
   }, wishlist.length)), /*#__PURE__*/React.createElement("button", {
     onClick: () => setIsCartOpen(true),
-    className: "h-11 px-4 flex items-center justify-center gap-2.5 rounded-xl bg-stone-900 hover:bg-pink-600 text-white text-xs font-bold transition-all shadow-md hover:shadow-pink-300/50 shrink-0 cursor-pointer",
+    className: "h-10 sm:h-11 px-3 sm:px-4 flex items-center justify-center gap-2 rounded-xl bg-stone-900 hover:bg-pink-600 text-white text-xs font-bold transition-all shadow-md hover:shadow-pink-300/50 shrink-0 cursor-pointer",
     title: "Ver Carrito de Compras"
   }, /*#__PURE__*/React.createElement("div", {
     className: "relative"
@@ -1024,13 +996,45 @@ function Navbar() {
     className: "hidden sm:inline font-bold"
   }, cartSubtotal > 0 ? formatPrice(cartSubtotal) : "Carrito")), /*#__PURE__*/React.createElement("button", {
     onClick: () => setIsAdminOpen(true),
-    className: "h-11 px-3 flex items-center justify-center gap-1.5 rounded-xl bg-pink-50 border border-pink-200 text-pink-700 hover:bg-pink-100 hover:text-pink-800 transition-all shadow-sm shrink-0 cursor-pointer text-xs font-bold",
+    className: "h-10 sm:h-11 px-2.5 sm:px-3 flex items-center justify-center gap-1.5 rounded-xl bg-pink-50 border border-pink-200 text-pink-700 hover:bg-pink-100 hover:text-pink-800 transition-all shadow-sm shrink-0 cursor-pointer text-xs font-bold",
     title: "Panel de Configuración de la Tienda (Prendas, Colecciones, Contacto, Pagos)"
   }, /*#__PURE__*/React.createElement(Icons.Settings, {
     className: "w-4 h-4 text-pink-600"
   }), /*#__PURE__*/React.createElement("span", {
-    className: "hidden md:inline"
-  }, "Admin")))), searchOpen && /*#__PURE__*/React.createElement("div", {
+    className: "hidden sm:inline"
+  }, "Admin")))), /*#__PURE__*/React.createElement("nav", {
+    className: "hidden lg:flex items-center justify-between border-t border-stone-200/60 py-2 gap-2 text-xs xl:text-sm font-bold text-stone-700"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-1 xl:gap-2 overflow-x-auto scrollbar-none py-0.5"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setCurrentView("home");
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    },
+    className: `h-9 px-3.5 flex items-center justify-center whitespace-nowrap rounded-xl transition-all cursor-pointer ${currentView === "home" ? "bg-pink-50 text-pink-700 font-extrabold border border-pink-200 shadow-sm" : "hover:text-pink-600 hover:bg-stone-50"}`
+  }, "Inicio"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setSelectedCategory("all");
+      setCurrentView("catalog");
+      const el = document.getElementById("catalogo-section");
+      if (el) el.scrollIntoView({
+        behavior: "smooth"
+      });
+    },
+    className: "h-9 px-3.5 flex items-center justify-center whitespace-nowrap rounded-xl hover:text-pink-600 hover:bg-stone-50 transition-all cursor-pointer"
+  }, "Catálogo"), settings.categories.filter(c => c.id !== "all").map(cat => /*#__PURE__*/React.createElement("button", {
+    key: cat.id,
+    onClick: () => navigateToCategory(cat.id),
+    className: `h-9 px-3.5 flex items-center justify-center whitespace-nowrap rounded-xl transition-all cursor-pointer ${selectedCategory === cat.id && currentView === "catalog" ? "bg-pink-50 text-pink-700 font-extrabold border border-pink-200 shadow-sm" : "hover:text-pink-600 hover:bg-stone-50"}`
+  }, cat.label))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setIsWholesaleModalOpen(true),
+    className: "h-9 px-3.5 flex items-center justify-center gap-1.5 rounded-xl bg-pink-50/90 hover:bg-pink-100 text-pink-800 border border-pink-200/80 transition-all whitespace-nowrap cursor-pointer shadow-sm shrink-0 ml-auto"
+  }, /*#__PURE__*/React.createElement("span", null, "Mayorista"), /*#__PURE__*/React.createElement("span", {
+    className: "bg-pink-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider"
+  }, "Combos"))), searchOpen && /*#__PURE__*/React.createElement("div", {
     className: "md:hidden py-3 border-t border-[#E8E1D5] animate-fade-in"
   }, /*#__PURE__*/React.createElement("div", {
     className: "relative"
