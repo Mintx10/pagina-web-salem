@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Jeans SLM ✨ | Indumentaria Salem 🐈‍⬛ - Tienda Oficial</title>
+    
+    <!-- Metatags SEO & Redes Sociales -->
+    <meta name="description" content="Tienda online oficial de Jeans SLM e Indumentaria Salem. Vestí con estilo, sentite única. Jeans tiro alto, corsets, camperas puffer y venta mayorista y minorista a todo el país." />
+    <meta property="og:title" content="Jeans SLM ✨ | Indumentaria Salem 🐈‍⬛" />
+    <meta property="og:description" content="Mayorista y minorista. Vestí con estilo, sentite única. Envíos a toda Argentina." />
+    <meta property="og:image" content="brand/logo.png" />
+    <meta property="og:type" content="website" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="brand/logo.png" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS (CDN + Local fallback) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      window.tailwind || document.write('<script src="vendor/tailwind.js"><\/script>');
+    </script>
+    <script>
+      function configureTailwind() {
+        if (typeof tailwind !== 'undefined') {
+          tailwind.config = {
+            theme: {
+              extend: {
+                colors: {
+                  salem: {
+                    50: '#fdf2f8',
+                    100: '#fce7f3',
+                    200: '#fbcfe8',
+                    300: '#f9a8d4',
+                    400: '#f472b6',
+                    500: '#ec4899',
+                    600: '#db2777',
+                    700: '#be185d',
+                    800: '#9d174d',
+                    900: '#831843',
+                  }
+                },
+                fontFamily: {
+                  sans: ['Plus Jakarta Sans', 'sans-serif'],
+                  display: ['Space Grotesk', 'sans-serif'],
+                }
+              }
+            }
+          };
+        }
+      }
+      configureTailwind();
+    </script>
+
+    <!-- Canvas Confetti -->
+    <script src="vendor/confetti.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="bg-[#FAF7F2] text-[#1C1917] selection:bg-pink-200 selection:text-pink-900 antialiased overflow-x-hidden min-h-screen">
+    
+    <!-- React Root -->
+    <div id="root">
+      <!-- Loading Skeleton antes de montar React -->
+      <div class="min-h-screen flex flex-col items-center justify-center p-6 bg-[#FAF7F2]">
+        <div class="w-16 h-16 rounded-full border-4 border-pink-200 border-t-pink-600 animate-spin mb-4"></div>
+        <h2 class="font-display font-bold text-lg text-stone-800">Cargando Jeans SLM ✨...</h2>
+        <p class="text-xs text-stone-500 mt-1">Indumentaria Salem 🐈‍⬛</p>
+      </div>
+    </div>
+
+    <!-- React 18 & ReactDOM 18 (Local con fallback a CDN) -->
+    <script src="vendor/react.min.js"></script>
+    <script>
+      window.React || document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"><\/script>');
+    </script>
+    <script src="vendor/react-dom.min.js"></script>
+    <script>
+      window.ReactDOM || document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"><\/script>');
+    </script>
+
+    <!-- Datos y Configuración de Salem -->
+    <script src="data/products.js"></script>
+    <script src="data/config.js"></script>
+
+    <!-- Código React Precompilado de la App (Ejecuta directo) -->
+    <script src="app.bundle.js"></script>
+  </body>
+</html>

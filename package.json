@@ -1,0 +1,19 @@
+{
+  "name": "pagina-web-salem",
+  "version": "1.0.0",
+  "description": "Tienda Online Oficial de Jeans SLM ✨ e Indumentaria Salem 🐈‍⬛",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo Static site ready",
+    "compile": "node build.js",
+    "start": "python -m http.server 8080"
+  },
+  "keywords": [
+    "ecommerce",
+    "indumentaria-salem",
+    "jeans-slm",
+    "tienda-ropa"
+  ],
+  "author": "Indumentaria Salem",
+  "license": "ISC"
+}
