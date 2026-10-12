@@ -585,6 +585,7 @@ function Navbar() {
     setCurrentView,
     searchQuery,
     setSearchQuery,
+    selectedCategory,
     setSelectedCategory,
     setIsWholesaleModalOpen,
     setIsAdminOpen
@@ -3830,13 +3831,52 @@ function App() {
   );
 }
 
+// Componente Error Boundary para evitar pantallas en blanco
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error("ErrorBoundary caught error:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center p-6 bg-stone-50 text-stone-900">
+          <div className="max-w-md w-full bg-white p-8 rounded-3xl border border-pink-200 shadow-xl text-center">
+            <div className="w-16 h-16 bg-pink-100 text-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4 font-bold text-2xl">⚠️</div>
+            <h2 className="text-xl font-bold font-display text-stone-900 mb-2">Jeans SLM ✨</h2>
+            <p className="text-sm text-stone-600 mb-4">Hubo un problema temporal al cargar los componentes.</p>
+            <p className="text-xs text-rose-500 font-mono bg-rose-50 p-3 rounded-xl mb-6 text-left overflow-auto max-h-32">
+              {this.state.error ? this.state.error.message : "Error desconocido"}
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full py-3 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-xl shadow-md transition-all cursor-pointer"
+            >
+              Recargar Tienda
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // Montar React en el elemento #root
 const rootElement = document.getElementById("root");
 if (rootElement) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
-    <StoreProvider>
-      <App />
-    </StoreProvider>
+    <ErrorBoundary>
+      <StoreProvider>
+        <App />
+      </StoreProvider>
+    </ErrorBoundary>
   );
 }

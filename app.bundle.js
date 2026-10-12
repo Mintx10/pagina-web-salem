@@ -887,6 +887,7 @@ function Navbar() {
     setCurrentView,
     searchQuery,
     setSearchQuery,
+    selectedCategory,
     setSelectedCategory,
     setIsWholesaleModalOpen,
     setIsAdminOpen
@@ -3527,9 +3528,50 @@ function App() {
   }, currentView === "home" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Hero, null), /*#__PURE__*/React.createElement(BenefitsBar, null), /*#__PURE__*/React.createElement(CategoryTabs, null), /*#__PURE__*/React.createElement(CatalogSection, null), /*#__PURE__*/React.createElement(InstagramFeedSection, null)) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CategoryTabs, null), /*#__PURE__*/React.createElement(CatalogSection, null))), /*#__PURE__*/React.createElement(Footer, null), /*#__PURE__*/React.createElement(QuickViewModal, null), /*#__PURE__*/React.createElement(CartDrawer, null), /*#__PURE__*/React.createElement(CheckoutModal, null), /*#__PURE__*/React.createElement(WishlistModal, null), /*#__PURE__*/React.createElement(SizeGuideModal, null), /*#__PURE__*/React.createElement(WholesaleModal, null), /*#__PURE__*/React.createElement(LegalModal, null), /*#__PURE__*/React.createElement(AdminModal, null), /*#__PURE__*/React.createElement(ToastContainer, null));
 }
 
+// Componente Error Boundary para evitar pantallas en blanco
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: null
+    };
+  }
+  static getDerivedStateFromError(error) {
+    return {
+      hasError: true,
+      error
+    };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error("ErrorBoundary caught error:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return /*#__PURE__*/React.createElement("div", {
+        className: "min-h-screen flex items-center justify-center p-6 bg-stone-50 text-stone-900"
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "max-w-md w-full bg-white p-8 rounded-3xl border border-pink-200 shadow-xl text-center"
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "w-16 h-16 bg-pink-100 text-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4 font-bold text-2xl"
+      }, "⚠️"), /*#__PURE__*/React.createElement("h2", {
+        className: "text-xl font-bold font-display text-stone-900 mb-2"
+      }, "Jeans SLM ✨"), /*#__PURE__*/React.createElement("p", {
+        className: "text-sm text-stone-600 mb-4"
+      }, "Hubo un problema temporal al cargar los componentes."), /*#__PURE__*/React.createElement("p", {
+        className: "text-xs text-rose-500 font-mono bg-rose-50 p-3 rounded-xl mb-6 text-left overflow-auto max-h-32"
+      }, this.state.error ? this.state.error.message : "Error desconocido"), /*#__PURE__*/React.createElement("button", {
+        onClick: () => window.location.reload(),
+        className: "w-full py-3 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-xl shadow-md transition-all cursor-pointer"
+      }, "Recargar Tienda")));
+    }
+    return this.props.children;
+  }
+}
+
 // Montar React en el elemento #root
 const rootElement = document.getElementById("root");
 if (rootElement) {
   const root = ReactDOM.createRoot(rootElement);
-  root.render(/*#__PURE__*/React.createElement(StoreProvider, null, /*#__PURE__*/React.createElement(App, null)));
+  root.render(/*#__PURE__*/React.createElement(ErrorBoundary, null, /*#__PURE__*/React.createElement(StoreProvider, null, /*#__PURE__*/React.createElement(App, null))));
 }
