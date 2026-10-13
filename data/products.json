@@ -1,0 +1,701 @@
+[
+  {
+    "id": "slm-jean-wide-leg",
+    "title": "Jean Wide Leg Salem Tiro Alto Celeste",
+    "subtitle": "Denim rígido premium 100% algodón con calce fit soñado",
+    "description": "El clásico infaltable y más pedido de Salem. Jean wide leg tiro alto en denim rígido color celeste vintage con proceso de lavado suave. Diseñado para estilizar la cintura y caer recto con una soltura impecable que alarga las piernas. Cuenta con cinco bolsillos reales, remaches metálicos y botón personalizado Salem.",
+    "features": [
+      "100% Denim Algodón Rígido de primera calidad",
+      "Tiro súper alto modelador de cintura",
+      "Pierna ancha recta con caída fluida y estructurada",
+      "Costuras reforzadas y lavado vintage desgastado a mano"
+    ],
+    "fabricCare": "Lavar del revés con agua fría. No usar blanqueador. Secar a la sombra para mantener el tono celeste vintage.",
+    "price": 48900,
+    "promoPrice": 41900,
+    "category": "jeans",
+    "images": [
+      "products/jean-wide-leg-celeste-vintage.jpg",
+      "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=900&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1582552938357-32b906df40cb?w=900&auto=format&fit=crop&q=80"
+    ],
+    "sizes": [
+      {
+        "size": "36",
+        "stock": 3
+      },
+      {
+        "size": "38",
+        "stock": 5
+      },
+      {
+        "size": "40",
+        "stock": 4
+      },
+      {
+        "size": "42",
+        "stock": 2
+      },
+      {
+        "size": "44",
+        "stock": 1
+      }
+    ],
+    "colors": [
+      {
+        "name": "Celeste Vintage",
+        "hex": "#87B2D8"
+      },
+      {
+        "name": "Azul Denim",
+        "hex": "#3A597E"
+      }
+    ],
+    "rating": 5,
+    "reviewCount": 184,
+    "stock": 15,
+    "isBestSeller": true,
+    "isNew": false,
+    "freeShipping": false,
+    "installmentsMax": 6,
+    "tags": [
+      "Wide Leg",
+      "Tiro Alto",
+      "Denim Rígido",
+      "Bestseller",
+      "Calce Soñado"
+    ],
+    "reviews": [
+      {
+        "id": "rev-1",
+        "author": "Zoe Gaete",
+        "rating": 5,
+        "date": "Hace 2 días",
+        "comment": "El calce de este jean es una locura total! Mido 1.65 y me quedó perfecto de largo. El denim rígido no cede ni se deforma.",
+        "verified": true
+      },
+      {
+        "id": "rev-2",
+        "author": "Martina V.",
+        "rating": 5,
+        "date": "Hace 5 días",
+        "comment": "Compré el talle 38 guiándome por la tabla de medidas y me calzó impecable. Lo uso para salir y para todos los días.",
+        "verified": true
+      }
+    ]
+  },
+  {
+    "id": "slm-corset-brocado",
+    "title": "Corset Vintage Brocado Renacimiento",
+    "subtitle": "Estructura con ballenas reforzadas y tapiz floral de autor",
+    "description": "Una obra de arte hecha prenda. Confeccionado en jacquard brocado importado con textura en relieve tipo gobelino floral. Posee copas preformadas con aro que realzan el busto, ballenas internas flexibles de alta densidad y cierre frontal con ganchos metálicos vintage. La espalda con lazo cruzado permite amoldarlo al milímetro a tu figura.",
+    "features": [
+      "Brocado floral texturado de alta densidad con hilo dorado sutil",
+      "Ballenas modeladoras internas que estilizan la silueta",
+      "Cierre frontal de corsetería de época con broches de acero",
+      "Espalda regulable con ojalillos y cinta para calce personalizado"
+    ],
+    "fabricCare": "Limpieza en seco o lavado a mano con agua fría y jabón neutro. No retorcer.",
+    "price": 39500,
+    "promoPrice": 33900,
+    "category": "corsets",
+    "images": [
+      "products/corset-vintage-brocado.jpg",
+      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=900&auto=format&fit=crop&q=80"
+    ],
+    "sizes": [
+      {
+        "size": "S (85-90)",
+        "stock": 3
+      },
+      {
+        "size": "M (90-95)",
+        "stock": 4
+      },
+      {
+        "size": "L (95-100)",
+        "stock": 2
+      }
+    ],
+    "colors": [
+      {
+        "name": "Verde Botánico & Oro",
+        "hex": "#7A8256"
+      },
+      {
+        "name": "Tierra & Tapiz",
+        "hex": "#A88B69"
+      }
+    ],
+    "rating": 4.9,
+    "reviewCount": 92,
+    "stock": 9,
+    "isBestSeller": true,
+    "isNew": true,
+    "freeShipping": false,
+    "installmentsMax": 6,
+    "tags": [
+      "Brocado",
+      "Vintage",
+      "Ballenas",
+      "Exclusivo",
+      "Fiesta"
+    ],
+    "reviews": [
+      {
+        "id": "rev-3",
+        "author": "Candelaria M.",
+        "rating": 5,
+        "date": "Hace 1 semana",
+        "comment": "Me volví loca cuando me llegó. La calidad de la tela es pesada y de boutique cara. Queda súper fino.",
+        "verified": true
+      }
+    ]
+  },
+  {
+    "id": "slm-body-corset-rosa",
+    "title": "Body Corset Encaje Rosa Romántico",
+    "subtitle": "Encaje francés floral elastizado con tazas push-up y transparencias",
+    "description": "Romántico, elegante y sensual. Confeccionado en encaje bordado con motivo botánico floral sobre transparencias de tul ilusión. Tazas con aro que aseguran soporte sin perder delicadeza, breteles regulables con herrajes dorados y cierre inferior con broches a presión para máxima comodidad.",
+    "features": [
+      "Encaje floral elastizado ultra suave (no pica ni raspa)",
+      "Copas armadas con aro metálico que definen el escote",
+      "Tul micro-red con efecto translúcido estratégico",
+      "Breteles finos regulables con terminaciones metálicas"
+    ],
+    "fabricCare": "Lavar a mano en agua fría con bolsa de lavado. No centrifugar ni planchar sobre el encaje.",
+    "price": 36000,
+    "promoPrice": 29900,
+    "category": "corsets",
+    "images": [
+      "products/body-corset-encaje-pink.jpg",
+      "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=900&auto=format&fit=crop&q=80"
+    ],
+    "sizes": [
+      {
+        "size": "85",
+        "stock": 4
+      },
+      {
+        "size": "90",
+        "stock": 5
+      },
+      {
+        "size": "95",
+        "stock": 3
+      },
+      {
+        "size": "100",
+        "stock": 2
+      }
+    ],
+    "colors": [
+      {
+        "name": "Rosa Bebé",
+        "hex": "#F7A8C4"
+      },
+      {
+        "name": "Blanco Off-White",
+        "hex": "#F9F6F0"
+      }
+    ],
+    "rating": 5,
+    "reviewCount": 76,
+    "stock": 14,
+    "isBestSeller": false,
+    "isNew": true,
+    "freeShipping": false,
+    "installmentsMax": 6,
+    "tags": [
+      "Encaje",
+      "Push-up",
+      "Romántico",
+      "Pink Lovers"
+    ],
+    "reviews": [
+      {
+        "id": "rev-4",
+        "author": "Micaela F.",
+        "rating": 5,
+        "date": "Hace 3 días",
+        "comment": "El calce es soñado. Te estiliza la panza y el escote queda hermoso sin apretar.",
+        "verified": true
+      }
+    ]
+  },
+  {
+    "id": "slm-corset-saten-pink",
+    "title": "Corset Satén Rosa Barbiecore",
+    "subtitle": "Satén brillante elastizado con moño coquette y lazo corset trasero",
+    "description": "El corset estrella viral de Salem. Confeccionado en satén elastizado de alto gramaje con brillo satinado suntuoso. Incluye lazo coquette frontal, ballenas ergonómicas y ajuste trasero con cordones para lograr la silueta de avispa perfecta.",
+    "features": [
+      "Satén pesado de calidad superior con destello perlado",
+      "Detalle de lazo frontal en cinta gross al tono",
+      "8 ballenas flexibles reforzadas para modelado de cintura",
+      "Espalda acordonada regulable que abarca varios talles"
+    ],
+    "fabricCare": "Lavar a mano con agua fría. Planchar a temperatura baja del revés con paño.",
+    "price": 37500,
+    "promoPrice": 31500,
+    "category": "corsets",
+    "images": [
+      "products/corset-saten-bunny-pink.jpg",
+      "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=900&auto=format&fit=crop&q=80"
+    ],
+    "sizes": [
+      {
+        "size": "S",
+        "stock": 4
+      },
+      {
+        "size": "M",
+        "stock": 4
+      },
+      {
+        "size": "L",
+        "stock": 2
+      }
+    ],
+    "colors": [
+      {
+        "name": "Rosa Barbie",
+        "hex": "#FF69B4"
+      },
+      {
+        "name": "Negro Noir",
+        "hex": "#1C1917"
+      }
+    ],
+    "rating": 4.9,
+    "reviewCount": 115,
+    "stock": 10,
+    "isBestSeller": true,
+    "isNew": false,
+    "freeShipping": false,
+    "installmentsMax": 6,
+    "tags": [
+      "Satén",
+      "Barbiecore",
+      "Coquette",
+      "Top Trending",
+      "Avispa"
+    ],
+    "reviews": [
+      {
+        "id": "rev-5",
+        "author": "Lara D.",
+        "rating": 5,
+        "date": "Hace 4 días",
+        "comment": "Un fuego este corset! Con un pantalón sastrero o un jean de Salem queda espectacular.",
+        "verified": true
+      }
+    ]
+  },
+  {
+    "id": "slm-campera-puffer-pink",
+    "title": "Campera Puffer Bicolor Fucsia & Black",
+    "subtitle": "Relleno térmico siliconado ultraliviano con cuello alto envolvente",
+    "description": "La campera de invierno más canchera y abrigada. Diseño bicolor con fucsia vibrante en el cuerpo y negro matte en canesú y cuello. Posee relleno de vellón siliconado térmico, cierre frontal doble tracción y cordones elásticos ajustables en la cintura para usarla recta o tipo cropped puffer.",
+    "features": [
+      "Exterior impermeable rompevientos con acabado satinado suave",
+      "Relleno térmico hipoalergénico ultra acolchado",
+      "Cuello alto protector contra el frío y viento",
+      "Tancas regulables en cintura para adaptar el largo"
+    ],
+    "fabricCare": "Lavado en lavarropas programa prendas delicadas con agua fría. Secar colgada a la sombra.",
+    "price": 78000,
+    "promoPrice": 66900,
+    "category": "camperas",
+    "images": [
+      "products/campera-puffer-bicolor-pink.jpg",
+      "https://images.unsplash.com/photo-1544441893-675973e31985?w=900&auto=format&fit=crop&q=80"
+    ],
+    "sizes": [
+      {
+        "size": "S",
+        "stock": 2
+      },
+      {
+        "size": "M",
+        "stock": 3
+      },
+      {
+        "size": "L",
+        "stock": 2
+      },
+      {
+        "size": "XL",
+        "stock": 1
+      }
+    ],
+    "colors": [
+      {
+        "name": "Fucsia & Negro",
+        "hex": "#E91E63"
+      },
+      {
+        "name": "Total Black",
+        "hex": "#111111"
+      }
+    ],
+    "rating": 5,
+    "reviewCount": 64,
+    "stock": 8,
+    "isBestSeller": false,
+    "isNew": true,
+    "freeShipping": true,
+    "installmentsMax": 6,
+    "tags": [
+      "Puffer",
+      "Bicolor",
+      "Térmica",
+      "Impermeable",
+      "Envío Gratis"
+    ],
+    "reviews": [
+      {
+        "id": "rev-6",
+        "author": "Agustina R.",
+        "rating": 5,
+        "date": "Hace 1 semana",
+        "comment": "Súper abrigada y no pesa nada! El color fucsia es tal cual la foto, súper encendido y hermoso.",
+        "verified": true
+      }
+    ]
+  },
+  {
+    "id": "slm-campera-biker-corderito",
+    "title": "Campera Aviadora Biker Doble Faz Corderito",
+    "subtitle": "Eco-cuero pesado gastado con forrería íntegra de corderito térmico",
+    "description": "Nuestra prenda ícono de temporada. Campera biker estilo aviadora confeccionada en eco-cuero de alto gramaje con textura graneada vintage y forrería completa de corderito térmico soft. Solapa amplia con presillas metálicas, cierre cruzado con cremallera gruesa plateada y cinturón desmontable con hebilla en la cintura.",
+    "features": [
+      "Eco-cuero premium ultra resistente de tacto genuino",
+      "Interior 100% forrado en corderito suave al tono",
+      "Herrajes metálicos macizos niquelados de alta durabilidad",
+      "Bolsillos laterales profundos con cierre metálico"
+    ],
+    "fabricCare": "Limpieza con paño húmedo. No sumergir en agua ni planchar directo.",
+    "price": 89000,
+    "promoPrice": 77900,
+    "category": "camperas",
+    "images": [
+      "products/campera-biker-corderito-doble.jpg",
+      "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=900&auto=format&fit=crop&q=80"
+    ],
+    "sizes": [
+      {
+        "size": "S",
+        "stock": 2
+      },
+      {
+        "size": "M",
+        "stock": 3
+      },
+      {
+        "size": "L",
+        "stock": 2
+      }
+    ],
+    "colors": [
+      {
+        "name": "Negro & Corderito Negro",
+        "hex": "#1C1917"
+      },
+      {
+        "name": "Marrón Caramelo & Dulce de Leche",
+        "hex": "#78350F"
+      }
+    ],
+    "rating": 5,
+    "reviewCount": 143,
+    "stock": 7,
+    "isBestSeller": true,
+    "isNew": true,
+    "freeShipping": true,
+    "installmentsMax": 6,
+    "tags": [
+      "Aviadora",
+      "Corderito",
+      "Eco-Cuero",
+      "Doble Faz",
+      "Abrigo Pesado"
+    ],
+    "reviews": [
+      {
+        "id": "rev-7",
+        "author": "Bárbara S.",
+        "rating": 5,
+        "date": "Hace 4 días",
+        "comment": "Es un sueño de campera. Tiene un peso y una caída de prenda de alta gama. El corderito abriga un montón.",
+        "verified": true
+      }
+    ]
+  },
+  {
+    "id": "slm-chaqueta-eco-cuero-crop",
+    "title": "Chaqueta Corta Eco Cuero Chocolate",
+    "subtitle": "Corte cropped sastrero moderno con botones joya y bolsillos plaqué",
+    "description": "Chaqueta sastrera corta confeccionada en eco-cuero de tono marrón chocolate de textura suave y flexible. Cuello solapa clásico, bolsillos frontales con tapita, botones metálicos plateados con relieve y caída estructurada que realza los pantalones tiro alto.",
+    "features": [
+      "Eco-cuero suave con forrería interior de tafeta al tono",
+      "Largo cropped ideal para combinar con jeans tiro alto",
+      "Botones metálicos texturados tipo botón joya",
+      "Corte cuadrado moderno con manga holgada"
+    ],
+    "fabricCare": "Limpiar con paño húmedo. Guardar en percha anatómica.",
+    "price": 62000,
+    "promoPrice": 52900,
+    "category": "camperas",
+    "images": [
+      "products/chaqueta-eco-cuero-cropped.jpg",
+      "https://images.unsplash.com/photo-1548883354-7622d03aca27?w=900&auto=format&fit=crop&q=80"
+    ],
+    "sizes": [
+      {
+        "size": "S",
+        "stock": 3
+      },
+      {
+        "size": "M",
+        "stock": 4
+      },
+      {
+        "size": "L",
+        "stock": 3
+      }
+    ],
+    "colors": [
+      {
+        "name": "Chocolate Brown",
+        "hex": "#4A2E1B"
+      },
+      {
+        "name": "Negro Azabache",
+        "hex": "#111111"
+      }
+    ],
+    "rating": 4.8,
+    "reviewCount": 58,
+    "stock": 10,
+    "isBestSeller": false,
+    "isNew": false,
+    "freeShipping": true,
+    "installmentsMax": 6,
+    "tags": [
+      "Cropped",
+      "Eco-Cuero",
+      "Chocolate",
+      "Sastrero",
+      "Otoño"
+    ],
+    "reviews": [
+      {
+        "id": "rev-8",
+        "author": "Solana P.",
+        "rating": 5,
+        "date": "Hace 6 días",
+        "comment": "El color marrón chocolate es el tono de la temporada. Es re liviana y queda hermosa puesta.",
+        "verified": true
+      }
+    ]
+  },
+  {
+    "id": "slm-falda-tablas-skater",
+    "title": "Pollera Skater Tablas Nude & Top Grunge",
+    "subtitle": "Falda tableada tiro alto con short interior incorporado para máxima comodidad",
+    "description": "La mini falda más versátil y cómoda de tu placard. Diseño plisado con tablas pronunciadas en gabardina pesada elastizada color arena/nude. Incluye forrería con short interior anti-transparencia para moverte con total libertad sin preocuparte por nada.",
+    "features": [
+      "Gabardina con spandex que mantiene las tablas impecables",
+      "Short de punto suave incorporado en el interior",
+      "Cintura ancha que no marca y estiliza la cadera",
+      "Cierre invisible lateral de fácil postura"
+    ],
+    "fabricCare": "Lavar del revés en agua fría. No centrifugar fuerte para conservar el plisado.",
+    "price": 34000,
+    "promoPrice": 28500,
+    "category": "faldas",
+    "images": [
+      "products/falda-tablas-skater.jpg",
+      "https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=900&auto=format&fit=crop&q=80"
+    ],
+    "sizes": [
+      {
+        "size": "S (Talle 36-38)",
+        "stock": 5
+      },
+      {
+        "size": "M (Talle 38-40)",
+        "stock": 4
+      },
+      {
+        "size": "L (Talle 40-42)",
+        "stock": 3
+      }
+    ],
+    "colors": [
+      {
+        "name": "Nude Arena",
+        "hex": "#D7C4B7"
+      },
+      {
+        "name": "Negro Tennis",
+        "hex": "#1C1917"
+      }
+    ],
+    "rating": 4.9,
+    "reviewCount": 88,
+    "stock": 12,
+    "isBestSeller": true,
+    "isNew": false,
+    "freeShipping": false,
+    "installmentsMax": 6,
+    "tags": [
+      "Tableada",
+      "Con Short",
+      "Skater",
+      "Y2K",
+      "Comodidad Total"
+    ],
+    "reviews": [
+      {
+        "id": "rev-9",
+        "author": "Lucía B.",
+        "rating": 5,
+        "date": "Hace 3 días",
+        "comment": "Que tenga short abajo es un 1000! Podés bailar y saltar tranquila. Las tablas no se desarman con el lavado.",
+        "verified": true
+      }
+    ]
+  },
+  {
+    "id": "slm-bermuda-cargo-desert",
+    "title": "Bermuda Cargo Desierto & Halter Top",
+    "subtitle": "Bermuda sastrera tiro medio/alto con bolsillos fuelle y gabardina elastizada",
+    "description": "La tendencia cargo adaptada a una bermuda ultra chic. Confeccionada en gabardina suave color desierto/visón con bolsillos laterales fuelle con solapa, presillas para cinturón y calce relajado.",
+    "features": [
+      "Gabardina elastizada con proceso de pre-lavado anti-encogimiento",
+      "Bolsillos cargo laterales con fuelle y solapa",
+      "Cintura con pasacintos y botón de pasta al tono",
+      "Corte por encima de la rodilla súper sentador"
+    ],
+    "fabricCare": "Lavar con agua fría y colores similares.",
+    "price": 38000,
+    "promoPrice": 32000,
+    "category": "pantalones",
+    "images": [
+      "products/bermuda-cargo-desert.jpg",
+      "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=900&auto=format&fit=crop&q=80"
+    ],
+    "sizes": [
+      {
+        "size": "36",
+        "stock": 3
+      },
+      {
+        "size": "38",
+        "stock": 3
+      },
+      {
+        "size": "40",
+        "stock": 2
+      },
+      {
+        "size": "42",
+        "stock": 1
+      }
+    ],
+    "colors": [
+      {
+        "name": "Visón Desierto",
+        "hex": "#8E7D6B"
+      },
+      {
+        "name": "Verde Militar",
+        "hex": "#556B2F"
+      }
+    ],
+    "rating": 4.7,
+    "reviewCount": 42,
+    "stock": 9,
+    "isBestSeller": false,
+    "isNew": false,
+    "freeShipping": false,
+    "installmentsMax": 6,
+    "tags": [
+      "Cargo",
+      "Bermuda",
+      "Streetwear",
+      "Básicos Urbanos"
+    ],
+    "reviews": [
+      {
+        "id": "rev-10",
+        "author": "Carolina T.",
+        "rating": 5,
+        "date": "Hace 2 semanas",
+        "comment": "Comodísima! Queda genial con zapas o borcegos.",
+        "verified": true
+      }
+    ]
+  },
+  {
+    "id": "slm-medias-strass-glow",
+    "title": "Medias Red Strass Luxury Glow",
+    "subtitle": "Pantimedias de micro-red con strass cristal termosellados reflectivos",
+    "description": "El accesorio definitivo para elevar tus outfits de noche y festivales. Medias de red micro-mesh elástica con cientos de cristales de strass termosellados que capturan la luz y brillan intensamente. Cintura ancha ultra suave que no corta la silueta y puntera reforzada para no engancharse.",
+    "features": [
+      "Micro-red elastizada de alta resistencia (Spandex + Nylon)",
+      "Cristales de strass con engarce termosellado que no se despegan",
+      "Cintura soft grip elástica sin costuras invasivas",
+      "Talle único súper adaptable desde el S hasta el XL"
+    ],
+    "fabricCare": "Lavar a mano en agua tibia con suavizante. No retorcer.",
+    "price": 19500,
+    "promoPrice": 15900,
+    "category": "accesorios",
+    "images": [
+      "products/pantimedias-strass-glow.jpg",
+      "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=900&auto=format&fit=crop&q=80"
+    ],
+    "sizes": [
+      {
+        "size": "Talle Único Adaptable (S al XL)",
+        "stock": 25
+      }
+    ],
+    "colors": [
+      {
+        "name": "Cristal Glow Nude",
+        "hex": "#F3E5D8"
+      },
+      {
+        "name": "Negro Strass",
+        "hex": "#1C1917"
+      }
+    ],
+    "rating": 5,
+    "reviewCount": 131,
+    "stock": 25,
+    "isBestSeller": true,
+    "isNew": true,
+    "freeShipping": false,
+    "installmentsMax": 6,
+    "tags": [
+      "Strass",
+      "Brillo",
+      "Noche",
+      "Accesorio Viral",
+      "Infaltable"
+    ],
+    "reviews": [
+      {
+        "id": "rev-11",
+        "author": "Valentina D.",
+        "rating": 5,
+        "date": "Hace 1 día",
+        "comment": "Brillan una barbaridad! Las usé para una fiesta electrónica y no se me despegó ni un solo cristal. 10 de 10.",
+        "verified": true
+      }
+    ]
+  }
+]

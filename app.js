@@ -233,6 +233,15 @@ function StoreProvider({ children }) {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
 
+  // Autenticación de Administradora Principal
+  const [adminAuth, setAdminAuth] = useState(() => {
+    const saved = localStorage.getItem("salem_admin_auth");
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return { isAuthenticated: false, token: null, user: null, githubToken: "" };
+  });
+
   // Sincronización en LocalStorage
   useEffect(() => {
     localStorage.setItem("salem_products", JSON.stringify(products));
@@ -255,9 +264,57 @@ function StoreProvider({ children }) {
   }, [orders]);
 
   useEffect(() => {
+    localStorage.setItem("salem_admin_auth", JSON.stringify(adminAuth));
+  }, [adminAuth]);
+
+  useEffect(() => {
     if (appliedCoupon) localStorage.setItem("salem_coupon", JSON.stringify(appliedCoupon));
     else localStorage.removeItem("salem_coupon");
   }, [appliedCoupon]);
+
+  // Cargar datos actualizados en vivo desde el Backend (/api/data)
+  useEffect(() => {
+    fetch('/api/data')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && data.success) {
+          if (Array.isArray(data.products) && data.products.length > 0) {
+            setProducts(data.products);
+          }
+          if (data.settings && typeof data.settings === 'object') {
+            setSettings(prev => ({ ...prev, ...data.settings }));
+          }
+        }
+      })
+      .catch(() => {
+        // Fallback transparente a datos locales en caso de estar offline
+      });
+  }, []);
+
+  // Función para guardar y publicar cambios en el Backend y en GitHub
+  const saveToBackend = async (customGhToken) => {
+    const tokenToUse = customGhToken !== undefined ? customGhToken : (adminAuth.githubToken || "");
+    try {
+      const res = await fetch('/api/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': adminAuth.token ? `Bearer ${adminAuth.token}` : ''
+        },
+        body: JSON.stringify({
+          products,
+          settings,
+          token: adminAuth.token,
+          githubToken: tokenToUse,
+          password: 'salem2026'
+        })
+      });
+      const data = await res.json();
+      return data;
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  };
 
   // Toasts
   const addToast = ({ title, description, type = "success" }) => {
@@ -484,6 +541,9 @@ function StoreProvider({ children }) {
     setLegalTab,
     isAdminOpen,
     setIsAdminOpen,
+    adminAuth,
+    setAdminAuth,
+    saveToBackend,
     orders,
     createOrder,
     toasts,
@@ -2910,14 +2970,29 @@ function AdminModal() {
     setProducts,
     orders,
     formatPrice,
-    addToast
+    addToast,
+    adminAuth,
+    setAdminAuth,
+    saveToBackend
   } = useStore();
 
   const [tab, setTab] = useState("products");
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [isNewProduct, setIsNewProduct] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
-  
+
+  // Estados de Autenticación de Administradora
+  const [loginEmail, setLoginEmail] = useState("contacto@indumentariasalem.com.ar");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // Estados de Sincronización Backend y GitHub
+  const [githubTokenInput, setGithubTokenInput] = useState(adminAuth?.githubToken || "");
+  const [isSavingBackend, setIsSavingBackend] = useState(false);
+  const [backendSyncMsg, setBackendSyncMsg] = useState("");
+
   // Formulario de edición / creación de prenda
   const [productForm, setProductForm] = useState({
     id: "",
@@ -2937,6 +3012,185 @@ function AdminModal() {
   });
 
   if (!isAdminOpen) return null;
+
+  // Manejador de Login de la Dueña
+  const handleAdminLogin = async (e) => {
+    e.preventDefault();
+    setIsLoggingIn(true);
+    setLoginError("");
+
+    try {
+      const res = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "login",
+          email: loginEmail,
+          password: loginPassword
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setAdminAuth({
+          isAuthenticated: true,
+          token: data.token,
+          user: data.user || { email: loginEmail, role: "owner" },
+          githubToken: adminAuth?.githubToken || ""
+        });
+        addToast({ title: "¡Bienvenida al Panel! ✨", description: "Acceso como administradora concedido.", type: "success" });
+        setIsLoggingIn(false);
+        return;
+      }
+    } catch (err) {}
+
+    // Fallback de clave directa
+    if (loginPassword.trim() === "salem2026") {
+      setAdminAuth({
+        isAuthenticated: true,
+        token: "local_master_session",
+        user: { email: loginEmail, role: "owner" },
+        githubToken: adminAuth?.githubToken || ""
+      });
+      addToast({ title: "¡Bienvenida al Panel! ✨", description: "Acceso autorizado.", type: "success" });
+    } else {
+      setLoginError("Contraseña incorrecta. Solo la titular de Salem puede administrar la tienda.");
+    }
+    setIsLoggingIn(false);
+  };
+
+  const handleLogout = () => {
+    setAdminAuth({ isAuthenticated: false, token: null, user: null, githubToken: adminAuth?.githubToken || "" });
+    addToast({ title: "Sesión cerrada", description: "El panel de control se ha bloqueado.", type: "info" });
+  };
+
+  // Guardar y Publicar en la Web (Backend + GitHub)
+  const handlePublishAll = async () => {
+    setIsSavingBackend(true);
+    setBackendSyncMsg("Enviando cambios al backend y guardando...");
+
+    const res = await saveToBackend(githubTokenInput);
+    setIsSavingBackend(false);
+
+    if (res && res.success) {
+      if (res.details && res.details.savedToGitHub) {
+        setBackendSyncMsg("¡Códigos actualizados en GitHub! Vercel está compilando.");
+        addToast({
+          title: "¡Publicado en GitHub y Vercel! 🚀",
+          description: "Los códigos del repositorio se actualizaron y el sitio está publicándose para todos.",
+          type: "success"
+        });
+      } else {
+        setBackendSyncMsg(res.message || "¡Cambios guardados en el backend!");
+        addToast({
+          title: "¡Guardado con éxito! ✨",
+          description: "Los cambios se guardaron y están listos para todos los clientes.",
+          type: "success"
+        });
+      }
+    } else {
+      setBackendSyncMsg("Aviso: " + (res?.error || "Error al conectar con backend"));
+      addToast({
+        title: "Guardado localmente",
+        description: "Tus cambios están activos en este navegador.",
+        type: "info"
+      });
+    }
+  };
+
+  const handleSaveGithubToken = () => {
+    setAdminAuth({ ...adminAuth, githubToken: githubTokenInput.trim() });
+    addToast({
+      title: "Token de GitHub guardado 💾",
+      description: "El backend ahora usará este token para comitear los cambios a GitHub.",
+      type: "success"
+    });
+  };
+
+  // PANTALLA DE BLOQUEO / INICIO DE SESIÓN
+  if (!adminAuth?.isAuthenticated) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto animate-fade-in">
+        <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm" onClick={() => setIsAdminOpen(false)} />
+        <div className="relative z-10 w-full max-w-md bg-white rounded-3xl border border-[#E8E1D5] shadow-2xl p-6 sm:p-8 text-stone-900 animate-slide-up">
+          <div className="flex justify-end">
+            <button onClick={() => setIsAdminOpen(false)} className="p-1.5 text-stone-400 hover:text-stone-900 cursor-pointer">
+              <Icons.X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="text-center mb-6">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-pink-500 to-rose-400 text-white flex items-center justify-center shadow-lg shadow-pink-200 mb-3 text-2xl">
+              🐈‍⬛
+            </div>
+            <h3 className="font-display font-black text-xl text-stone-900">
+              Acceso Administradora Principal
+            </h3>
+            <p className="text-xs text-stone-500 mt-1">
+              Ingresá con tu cuenta para modificar prendas, precios, stock y cobros de tu tienda.
+            </p>
+          </div>
+
+          <form onSubmit={handleAdminLogin} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-stone-700 mb-1">Usuario o Email Principal</label>
+              <input
+                type="text"
+                required
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                className="w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-3 text-xs focus:outline-none focus:border-pink-500 font-medium"
+                placeholder="contacto@indumentariasalem.com.ar"
+              />
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <label className="block text-xs font-bold text-stone-700">Contraseña de Administradora</label>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-[11px] text-pink-600 hover:text-pink-700 font-semibold cursor-pointer"
+                >
+                  {showPassword ? "Ocultar" : "Mostrar"}
+                </button>
+              </div>
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                value={loginPassword}
+                onChange={(e) => {
+                  setLoginPassword(e.target.value);
+                  setLoginError("");
+                }}
+                className="w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-3 text-xs focus:outline-none focus:border-pink-500 font-medium"
+                placeholder="Ingresá tu clave maestra..."
+              />
+            </div>
+
+            {loginError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-medium">
+                ⚠️ {loginError}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoggingIn}
+              className="w-full salem-gradient-btn text-white font-bold py-3.5 rounded-xl shadow-md text-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              {isLoggingIn ? "Verificando credenciales..." : "Ingresar al Panel de Control ✨"}
+            </button>
+          </form>
+
+          <div className="mt-5 pt-4 border-t border-stone-100 text-center">
+            <p className="text-[11px] text-stone-400">
+              🔒 Solo vos podés ingresar a modificar las cosas. La clave maestra inicial es: <strong className="text-stone-700 font-mono">salem2026</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Abrir formulario para nueva prenda
   const handleOpenNewProduct = () => {
@@ -2971,8 +3225,8 @@ function AdminModal() {
       category: p.category || "jeans",
       price: p.price,
       promoPrice: p.promoPrice || "",
-      sizesStr: p.sizes ? p.sizes.map(s => s.size).join(", ") : "S, M, L",
-      colorsStr: p.colors ? p.colors.map(c => c.name).join(", ") : "Original",
+      sizesStr: p.sizes ? p.sizes.map((s) => s.size).join(", ") : "S, M, L",
+      colorsStr: p.colors ? p.colors.map((c) => c.name).join(", ") : "Original",
       image: p.images && p.images[0] ? p.images[0] : "",
       stock: p.stock || 10,
       isBestSeller: !!p.isBestSeller,
@@ -2990,18 +3244,32 @@ function AdminModal() {
       return;
     }
 
-    const sizesArr = productForm.sizesStr.split(",").map(s => s.trim()).filter(Boolean).map(s => ({
-      size: s,
-      stock: Math.max(1, Math.round(productForm.stock / 3))
-    }));
+    const sizesArr = productForm.sizesStr
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((s) => ({
+        size: s,
+        stock: Math.max(1, Math.round(productForm.stock / 3))
+      }));
 
-    const colorsArr = productForm.colorsStr.split(",").map(c => c.trim()).filter(Boolean).map(c => ({
-      name: c,
-      hex: c.toLowerCase().includes("rosa") ? "#EC4899" : c.toLowerCase().includes("negro") ? "#18181B" : c.toLowerCase().includes("celeste") ? "#87CEEB" : "#A88B69"
-    }));
+    const colorsArr = productForm.colorsStr
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean)
+      .map((c) => ({
+        name: c,
+        hex: c.toLowerCase().includes("rosa")
+          ? "#EC4899"
+          : c.toLowerCase().includes("negro")
+          ? "#18181B"
+          : c.toLowerCase().includes("celeste")
+          ? "#87CEEB"
+          : "#A88B69"
+      }));
 
     const finalProduct = {
-      id: productForm.id || ("slm-" + Date.now()),
+      id: productForm.id || "slm-" + Date.now(),
       title: productForm.title,
       subtitle: productForm.subtitle || "Prenda de tendencia Salem",
       description: productForm.description || "Confeccionada con materiales de primera calidad y calce perfecto.",
@@ -3016,7 +3284,10 @@ function AdminModal() {
       promoPrice: productForm.promoPrice ? parseInt(productForm.promoPrice) : undefined,
       sizes: sizesArr.length > 0 ? sizesArr : [{ size: "Único", stock: 10 }],
       colors: colorsArr.length > 0 ? colorsArr : [{ name: "Original", hex: "#EC4899" }],
-      images: [productForm.image || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=900&auto=format&fit=crop&q=80"],
+      images: [
+        productForm.image ||
+          "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=900&auto=format&fit=crop&q=80"
+      ],
       rating: 5.0,
       reviewCount: Math.floor(20 + Math.random() * 50),
       stock: parseInt(productForm.stock) || 10,
@@ -3026,15 +3297,22 @@ function AdminModal() {
       installmentsMax: 6,
       tags: [productForm.category, "Salem 2026"],
       reviews: [
-        { id: "rev-new", author: "Clienta Verificada", rating: 5, date: "Reciente", comment: "Excelente calidad y calce!", verified: true }
+        {
+          id: "rev-new",
+          author: "Clienta Verificada",
+          rating: 5,
+          date: "Reciente",
+          comment: "Excelente calidad y calce!",
+          verified: true
+        }
       ]
     };
 
     if (isNewProduct) {
-      setProducts(prev => [finalProduct, ...prev]);
+      setProducts((prev) => [finalProduct, ...prev]);
       addToast({ title: "¡Prenda agregada con éxito! ✨", description: finalProduct.title, type: "success" });
     } else {
-      setProducts(prev => prev.map(p => p.id === finalProduct.id ? { ...p, ...finalProduct } : p));
+      setProducts((prev) => prev.map((p) => (p.id === finalProduct.id ? { ...p, ...finalProduct } : p)));
       addToast({ title: "Prenda actualizada ✏️", description: finalProduct.title, type: "success" });
     }
 
@@ -3044,14 +3322,17 @@ function AdminModal() {
   // Eliminar prenda
   const handleDeleteProduct = (id, title) => {
     if (confirm(`¿Estás segura de eliminar "${title}" del catálogo?`)) {
-      setProducts(prev => prev.filter(p => p.id !== id));
+      setProducts((prev) => prev.filter((p) => p.id !== id));
       addToast({ title: "Prenda eliminada 🗑️", description: title, type: "info" });
     }
   };
 
   // DESCARGAR ARCHIVO products.js
   const handleExportProductsFile = () => {
-    const code = "// Catálogo de Productos Oficiales - Indumentaria Salem 🐈‍⬛ / Jeans SLM ✨\nwindow.SALEM_PRODUCTS = " + JSON.stringify(products, null, 2) + ";\n";
+    const code =
+      "// Catálogo de Productos Oficiales - Indumentaria Salem 🐈‍⬛ / Jeans SLM ✨\nwindow.SALEM_PRODUCTS = " +
+      JSON.stringify(products, null, 2) +
+      ";\n";
     const blob = new Blob([code], { type: "application/javascript;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -3070,7 +3351,10 @@ function AdminModal() {
 
   // COPIAR CÓDIGO AL PORTAPAPELES
   const handleCopyProductsCode = () => {
-    const code = "// Catálogo de Productos Oficiales - Indumentaria Salem 🐈‍⬛ / Jeans SLM ✨\nwindow.SALEM_PRODUCTS = " + JSON.stringify(products, null, 2) + ";\n";
+    const code =
+      "// Catálogo de Productos Oficiales - Indumentaria Salem 🐈‍⬛ / Jeans SLM ✨\nwindow.SALEM_PRODUCTS = " +
+      JSON.stringify(products, null, 2) +
+      ";\n";
     navigator.clipboard.writeText(code);
     addToast({
       title: "¡Código copiado! 📋",
@@ -3086,13 +3370,16 @@ function AdminModal() {
       addToast({ title: "Falta el nombre", description: "Escribí el nombre de la colección.", type: "error" });
       return;
     }
-    const cleanId = newCategoryName.toLowerCase().trim()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    const cleanId = newCategoryName
+      .toLowerCase()
+      .trim()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9]/g, "-")
       .replace(/-+/g, "-")
       .replace(/^-|-$/g, "");
 
-    if (settings.categories.some(c => c.id === cleanId)) {
+    if (settings.categories.some((c) => c.id === cleanId)) {
       addToast({ title: "Ya existe", description: "Ya existe una colección con ese nombre o ID.", type: "error" });
       return;
     }
@@ -3114,7 +3401,7 @@ function AdminModal() {
   // ELIMINAR COLECCIÓN
   const handleDeleteCategory = (catId, catLabel) => {
     if (confirm(`¿Estás segura de eliminar la colección "${catLabel}" del menú y la tienda?`)) {
-      const updated = settings.categories.filter(c => c.id !== catId);
+      const updated = settings.categories.filter((c) => c.id !== catId);
       setSettings({ ...settings, categories: updated });
       addToast({
         title: "Colección eliminada",
@@ -3126,7 +3413,10 @@ function AdminModal() {
 
   // DESCARGAR CONFIG.JS
   const handleExportConfigFile = () => {
-    const code = "// Configuración General - Jeans SLM ✨ | Indumentaria Salem 🐈‍⬛\nwindow.SALEM_CONFIG = " + JSON.stringify(settings, null, 2) + ";\n";
+    const code =
+      "// Configuración General - Jeans SLM ✨ | Indumentaria Salem 🐈‍⬛\nwindow.SALEM_CONFIG = " +
+      JSON.stringify(settings, null, 2) +
+      ";\n";
     const blob = new Blob([code], { type: "application/javascript;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -3145,7 +3435,10 @@ function AdminModal() {
 
   // COPIAR CONFIGURACIÓN AL PORTAPAPELES
   const handleCopyConfigCode = () => {
-    const code = "// Configuración General - Jeans SLM ✨ | Indumentaria Salem 🐈‍⬛\nwindow.SALEM_CONFIG = " + JSON.stringify(settings, null, 2) + ";\n";
+    const code =
+      "// Configuración General - Jeans SLM ✨ | Indumentaria Salem 🐈‍⬛\nwindow.SALEM_CONFIG = " +
+      JSON.stringify(settings, null, 2) +
+      ";\n";
     navigator.clipboard.writeText(code);
     addToast({
       title: "¡Configuración copiada! 📋",
@@ -3155,7 +3448,7 @@ function AdminModal() {
   };
 
   const handleResetDefaults = () => {
-    if (confirm("¿Estás seguro de restablecer todos los productos y configuraciones a los valores iniciales?")) {
+    if (confirm("¿Estás segura de restablecer todos los productos y configuraciones a los valores iniciales de fábrica?")) {
       localStorage.removeItem("salem_products");
       localStorage.removeItem("salem_store_settings");
       setProducts(window.SALEM_PRODUCTS);
@@ -3171,24 +3464,56 @@ function AdminModal() {
       <div className="relative z-10 w-full max-w-4xl bg-white rounded-3xl border border-[#E8E1D5] shadow-2xl p-6 sm:p-8 text-stone-900 animate-slide-up max-h-[92vh] overflow-y-auto">
         
         {/* Header Admin */}
-        <div className="flex items-center justify-between pb-4 border-b border-stone-200 mb-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-stone-200 mb-5 gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center shrink-0">
               <Icons.Settings className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-display font-black text-xl text-stone-900">
-                Panel de Control de tu Tienda
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-display font-black text-xl text-stone-900">
+                  Panel de Control de tu Tienda ✨
+                </h3>
+                <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                  🟢 Dueña
+                </span>
+              </div>
               <p className="text-xs text-stone-500">
-                Administrá tus prendas, precios, pedidos y enlaces sin depender de programadores.
+                Conectada como: <strong className="text-stone-800">{adminAuth.user?.email || "Principal"}</strong>
               </p>
             </div>
           </div>
-          <button onClick={() => setIsAdminOpen(false)} className="p-2 text-stone-400 hover:text-stone-900">
-            <Icons.X className="w-5 h-5" />
-          </button>
+
+          <div className="flex items-center gap-2 self-end sm:self-auto">
+            <button
+              onClick={handlePublishAll}
+              disabled={isSavingBackend}
+              className="salem-gradient-btn text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              title="Guarda los cambios en el backend y los publica para todos los clientes"
+            >
+              <span>{isSavingBackend ? "⏳ Publicando..." : "🚀 Guardar y Publicar en la Web"}</span>
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="px-2.5 py-2 text-stone-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
+              title="Cerrar sesión de administradora"
+            >
+              Bloquear
+            </button>
+
+            <button onClick={() => setIsAdminOpen(false)} className="p-2 text-stone-400 hover:text-stone-900 cursor-pointer">
+              <Icons.X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
+
+        {backendSyncMsg && (
+          <div className="mb-4 p-2.5 bg-pink-50 border border-pink-200 text-pink-900 rounded-xl text-xs flex items-center justify-between">
+            <span>ℹ️ {backendSyncMsg}</span>
+            <button onClick={() => setBackendSyncMsg("")} className="text-pink-600 font-bold ml-2">✕</button>
+          </div>
+        )}
 
         {/* Tabs Principales */}
         <div className="flex border-b border-stone-200 gap-2 sm:gap-4 text-xs font-bold text-stone-500 mb-5 overflow-x-auto pb-1 scrollbar-none">
@@ -3217,6 +3542,12 @@ function AdminModal() {
             💳 Pagos & Banco
           </button>
           <button
+            onClick={() => setTab("backend")}
+            className={`pb-2.5 whitespace-nowrap transition-colors cursor-pointer ${tab === "backend" ? "text-pink-600 border-b-2 border-pink-600 font-extrabold" : "hover:text-stone-900"}`}
+          >
+            🚀 Sincronización & Backend
+          </button>
+          <button
             onClick={() => setTab("orders")}
             className={`pb-2.5 whitespace-nowrap transition-colors cursor-pointer ${tab === "orders" ? "text-pink-600 border-b-2 border-pink-600 font-extrabold" : "hover:text-stone-900"}`}
           >
@@ -3227,7 +3558,6 @@ function AdminModal() {
         {/* PESTAÑA: PRENDAS & CATÁLOGO */}
         {tab === "products" && (
           <div className="space-y-4">
-            
             {/* Barra de herramientas de productos */}
             <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-pink-50/70 border border-pink-200/60 rounded-2xl">
               <div>
@@ -3245,20 +3575,12 @@ function AdminModal() {
                 </button>
 
                 <button
-                  onClick={handleExportProductsFile}
-                  className="bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 cursor-pointer"
-                  title="Descarga el archivo data/products.js actualizado para tu sitio web"
+                  onClick={handlePublishAll}
+                  disabled={isSavingBackend}
+                  className="bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  title="Publica todos los productos en el backend y Vercel"
                 >
-                  <span>📥 Descargar products.js</span>
-                </button>
-
-                <button
-                  onClick={handleCopyProductsCode}
-                  className="bg-white hover:bg-stone-100 border border-stone-300 text-stone-700 text-xs font-bold px-3 py-2.5 rounded-xl flex items-center gap-1 cursor-pointer"
-                  title="Copiar código al portapapeles"
-                >
-                  <Icons.Copy className="w-3.5 h-3.5" />
-                  <span>Copiar</span>
+                  <span>🚀 Publicar Cambios</span>
                 </button>
               </div>
             </div>
@@ -3267,7 +3589,6 @@ function AdminModal() {
             <div className="divide-y divide-stone-100 max-h-[50vh] overflow-y-auto pr-1">
               {products.map((p) => (
                 <div key={p.id} className="py-3 flex items-center justify-between gap-3 text-xs hover:bg-stone-50/80 px-2 rounded-xl transition-colors">
-                  
                   {/* Foto y Título */}
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <img
@@ -3303,23 +3624,21 @@ function AdminModal() {
                   <div className="flex items-center gap-1.5 shrink-0">
                     <button
                       onClick={() => handleOpenEditProduct(p)}
-                      className="bg-stone-100 hover:bg-pink-100 hover:text-pink-700 text-stone-700 px-3 py-1.5 rounded-lg font-bold text-xs transition-colors"
+                      className="bg-stone-100 hover:bg-pink-100 hover:text-pink-700 text-stone-700 px-3 py-1.5 rounded-lg font-bold text-xs transition-colors cursor-pointer"
                     >
                       ✏️ Editar
                     </button>
                     <button
                       onClick={() => handleDeleteProduct(p.id, p.title)}
-                      className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                      className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                       title="Eliminar prenda"
                     >
                       <Icons.Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-
                 </div>
               ))}
             </div>
-
           </div>
         )}
 
@@ -3352,7 +3671,6 @@ function AdminModal() {
         {/* PESTAÑA: COLECCIONES & CATEGORÍAS */}
         {tab === "categories" && (
           <div className="space-y-5 text-xs">
-            {/* Formulario para agregar nueva colección */}
             <form onSubmit={handleAddCategory} className="p-4 bg-pink-50/70 border border-pink-200/80 rounded-2xl">
               <span className="font-bold text-pink-900 block mb-1">➕ Crear Nueva Colección para el Menú y Catálogo</span>
               <p className="text-[11px] text-pink-700 mb-3">
@@ -3375,7 +3693,6 @@ function AdminModal() {
               </div>
             </form>
 
-            {/* Listado de Colecciones activas */}
             <div>
               <span className="font-bold text-stone-800 block mb-2">Colecciones Actuales en tu Tienda ({settings.categories.length})</span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[42vh] overflow-y-auto pr-1">
@@ -3404,33 +3721,13 @@ function AdminModal() {
               </div>
             </div>
 
-            {/* Barra de Acciones y Guardado */}
             <div className="pt-4 border-t border-stone-200 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleExportConfigFile}
-                  className="bg-stone-900 hover:bg-stone-800 text-white font-bold px-3 py-2 rounded-xl text-[11px] flex items-center gap-1.5 cursor-pointer"
-                  title="Descargar archivo config.js"
-                >
-                  <span>📥 Descargar config.js</span>
-                </button>
-                <button
-                  onClick={handleCopyConfigCode}
-                  className="bg-white hover:bg-stone-100 border border-stone-300 text-stone-700 font-bold px-2.5 py-2 rounded-xl text-[11px] flex items-center gap-1 cursor-pointer"
-                >
-                  <Icons.Copy className="w-3.5 h-3.5" />
-                  <span>Copiar</span>
-                </button>
-              </div>
-
               <button
-                onClick={() => {
-                  setIsAdminOpen(false);
-                  addToast({ title: "Colecciones guardadas", description: "Los cambios ya son visibles en la tienda.", type: "success" });
-                }}
-                className="salem-gradient-btn text-white font-bold px-5 py-2.5 rounded-xl shadow-md cursor-pointer"
+                onClick={handlePublishAll}
+                disabled={isSavingBackend}
+                className="salem-gradient-btn text-white font-bold px-5 py-2.5 rounded-xl shadow-md cursor-pointer disabled:opacity-50"
               >
-                Guardar y Cerrar
+                🚀 Guardar y Publicar Colecciones
               </button>
             </div>
           </div>
@@ -3447,7 +3744,7 @@ function AdminModal() {
                   placeholder="+54 9 11 5834-9210"
                   value={settings.whatsappPhone || ""}
                   onChange={(e) => setSettings({ ...settings, whatsappPhone: e.target.value })}
-                  className="w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs"
+                  className="w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs font-medium"
                 />
                 <span className="text-[10px] text-stone-400 mt-0.5 block">Se muestra en el footer y en la barra superior.</span>
               </div>
@@ -3456,7 +3753,7 @@ function AdminModal() {
                 <label className="font-bold text-stone-700 block mb-1">Enlace Directo de WhatsApp</label>
                 <input
                   type="text"
-                  placeholder="https://wa.me/message/MKBUYHXSKDTQK1 o https://wa.me/5491158349210"
+                  placeholder="https://wa.me/5491158349210"
                   value={settings.whatsappUrl || ""}
                   onChange={(e) => setSettings({ ...settings, whatsappUrl: e.target.value })}
                   className="w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 font-mono text-xs"
@@ -3476,7 +3773,7 @@ function AdminModal() {
                     const u = e.target.value.replace("@", "");
                     setSettings({ ...settings, instagramUser: u, instagramUrl: `https://www.instagram.com/${u}/` });
                   }}
-                  className="w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs"
+                  className="w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs font-medium"
                 />
               </div>
 
@@ -3487,7 +3784,7 @@ function AdminModal() {
                   placeholder="contacto@indumentariasalem.com.ar"
                   value={settings.supportEmail || ""}
                   onChange={(e) => setSettings({ ...settings, supportEmail: e.target.value })}
-                  className="w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs"
+                  className="w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs font-medium"
                 />
               </div>
             </div>
@@ -3499,7 +3796,7 @@ function AdminModal() {
                 placeholder="Showroom Palermo Soho, CABA • Envíos a todo el país"
                 value={settings.showroomAddress || ""}
                 onChange={(e) => setSettings({ ...settings, showroomAddress: e.target.value })}
-                className="w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs"
+                className="w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs font-medium"
               />
               <span className="text-[10px] text-stone-400 mt-0.5 block">Se muestra en la columna de contacto del footer.</span>
             </div>
@@ -3521,7 +3818,7 @@ function AdminModal() {
                   type="number"
                   value={settings.freeShippingThreshold || 0}
                   onChange={(e) => setSettings({ ...settings, freeShippingThreshold: parseInt(e.target.value) || 0 })}
-                  className="w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs"
+                  className="w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs font-medium"
                 />
               </div>
             </div>
@@ -3532,36 +3829,17 @@ function AdminModal() {
                 type="text"
                 value={settings.announcementText || ""}
                 onChange={(e) => setSettings({ ...settings, announcementText: e.target.value })}
-                className="w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs"
+                className="w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs font-medium"
               />
             </div>
 
-            {/* Barra de Acciones */}
             <div className="pt-4 border-t border-stone-200 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleExportConfigFile}
-                  className="bg-stone-900 hover:bg-stone-800 text-white font-bold px-3 py-2 rounded-xl text-[11px] flex items-center gap-1.5 cursor-pointer"
-                >
-                  <span>📥 Descargar config.js</span>
-                </button>
-                <button
-                  onClick={handleCopyConfigCode}
-                  className="bg-white hover:bg-stone-100 border border-stone-300 text-stone-700 font-bold px-2.5 py-2 rounded-xl text-[11px] flex items-center gap-1 cursor-pointer"
-                >
-                  <Icons.Copy className="w-3.5 h-3.5" />
-                  <span>Copiar</span>
-                </button>
-              </div>
-
               <button
-                onClick={() => {
-                  setIsAdminOpen(false);
-                  addToast({ title: "Contacto guardado", description: "Datos actualizados en el footer y la web.", type: "success" });
-                }}
-                className="salem-gradient-btn text-white font-bold px-5 py-2.5 rounded-xl shadow-md cursor-pointer"
+                onClick={handlePublishAll}
+                disabled={isSavingBackend}
+                className="salem-gradient-btn text-white font-bold px-5 py-2.5 rounded-xl shadow-md cursor-pointer disabled:opacity-50"
               >
-                Guardar y Cerrar
+                🚀 Guardar y Publicar Contacto
               </button>
             </div>
           </div>
@@ -3582,10 +3860,12 @@ function AdminModal() {
                   type="text"
                   placeholder="Ej: SALEM.INDUMENTARIA.MP"
                   value={(settings.bankDetails && settings.bankDetails.alias) || ""}
-                  onChange={(e) => setSettings({
-                    ...settings,
-                    bankDetails: { ...(settings.bankDetails || {}), alias: e.target.value.toUpperCase() }
-                  })}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      bankDetails: { ...(settings.bankDetails || {}), alias: e.target.value.toUpperCase() }
+                    })
+                  }
                   className="w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs font-bold text-stone-900"
                 />
               </div>
@@ -3596,10 +3876,12 @@ function AdminModal() {
                   type="text"
                   placeholder="0070123400000012345678"
                   value={(settings.bankDetails && settings.bankDetails.cbu) || ""}
-                  onChange={(e) => setSettings({
-                    ...settings,
-                    bankDetails: { ...(settings.bankDetails || {}), cbu: e.target.value }
-                  })}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      bankDetails: { ...(settings.bankDetails || {}), cbu: e.target.value }
+                    })
+                  }
                   className="w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 font-mono text-xs"
                 />
               </div>
@@ -3610,12 +3892,14 @@ function AdminModal() {
                 <label className="font-bold text-stone-700 block mb-1">Nombre del Titular de la Cuenta</label>
                 <input
                   type="text"
-                  placeholder="Ej: Indumentaria Salem / Lucas Ibañez"
+                  placeholder="Ej: Indumentaria Salem SRL"
                   value={(settings.bankDetails && settings.bankDetails.holder) || ""}
-                  onChange={(e) => setSettings({
-                    ...settings,
-                    bankDetails: { ...(settings.bankDetails || {}), holder: e.target.value }
-                  })}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      bankDetails: { ...(settings.bankDetails || {}), holder: e.target.value }
+                    })
+                  }
                   className="w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs"
                 />
               </div>
@@ -3626,10 +3910,12 @@ function AdminModal() {
                   type="text"
                   placeholder="Ej: Mercado Pago / Banco Galicia"
                   value={(settings.bankDetails && settings.bankDetails.bank) || ""}
-                  onChange={(e) => setSettings({
-                    ...settings,
-                    bankDetails: { ...(settings.bankDetails || {}), bank: e.target.value }
-                  })}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      bankDetails: { ...(settings.bankDetails || {}), bank: e.target.value }
+                    })
+                  }
                   className="w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs"
                 />
               </div>
@@ -3670,32 +3956,110 @@ function AdminModal() {
               </div>
             </div>
 
-            {/* Barra de Acciones */}
             <div className="pt-4 border-t border-stone-200 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
+              <button
+                onClick={handlePublishAll}
+                disabled={isSavingBackend}
+                className="salem-gradient-btn text-white font-bold px-5 py-2.5 rounded-xl shadow-md cursor-pointer disabled:opacity-50"
+              >
+                🚀 Guardar y Publicar Datos de Cobro
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* PESTAÑA: SINCRONIZACIÓN & BACKEND */}
+        {tab === "backend" && (
+          <div className="space-y-5 text-xs">
+            {/* Panel de Estado del Backend */}
+            <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="font-bold text-emerald-900 text-sm">Backend Vercel Serverless Conectado</span>
+              </div>
+              <p className="text-[11px] text-emerald-700 leading-relaxed">
+                El backend detecta tus cambios a través de los endpoints <code className="bg-emerald-100 px-1 py-0.5 rounded font-mono">/api/save</code> y <code className="bg-emerald-100 px-1 py-0.5 rounded font-mono">/api/data</code>. Todo lo que modifiques aquí se guarda y se distribuye a todos los visitantes.
+              </p>
+            </div>
+
+            {/* Sincronización Directa con el Repositorio de GitHub */}
+            <div className="p-4 bg-pink-50/70 border border-pink-200 rounded-2xl space-y-3">
+              <div>
+                <span className="font-bold text-pink-900 text-sm block">🐱 Modificar Códigos en GitHub Automáticamente</span>
+                <p className="text-[11px] text-pink-700 mt-0.5">
+                  Podés vincular tu <strong>Personal Access Token de GitHub</strong>. Con esto, cada vez que hacés clic en <em>"Guardar y Publicar"</em>, el backend crea un commit directo en el repositorio <code className="font-mono text-pink-900 font-bold">Mintx10/pagina-web-salem</code> modificando los archivos de código en vivo y Vercel se actualiza solo.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="password"
+                  placeholder="github_pat_... o ghp_..."
+                  value={githubTokenInput}
+                  onChange={(e) => setGithubTokenInput(e.target.value)}
+                  className="flex-1 bg-white border border-stone-300 rounded-xl px-3 py-2 text-xs font-mono text-stone-900 focus:outline-none focus:border-pink-500"
+                />
+                <button
+                  onClick={handleSaveGithubToken}
+                  className="bg-stone-900 hover:bg-stone-800 text-white font-bold px-4 py-2 rounded-xl text-xs shrink-0 cursor-pointer"
+                >
+                  💾 Guardar Token
+                </button>
+              </div>
+
+              <div className="text-[10px] text-stone-500">
+                💡 Para obtener tu token gratis: Entrá a <strong>github.com &gt; Settings &gt; Developer Settings &gt; Personal access tokens &gt; Tokens (classic)</strong> y creá uno con permiso <code className="bg-white px-1 py-0.5 rounded border border-stone-200 font-mono">repo</code>.
+              </div>
+            </div>
+
+            {/* Botón de Publicación General */}
+            <div className="p-4 bg-white border border-stone-200 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div>
+                <span className="font-bold text-stone-900 block">Publicar Todos los Cambios Ahora</span>
+                <span className="text-[11px] text-stone-500">Aplica inmediatamente prendas, precios, colecciones y datos bancarios.</span>
+              </div>
+              <button
+                onClick={handlePublishAll}
+                disabled={isSavingBackend}
+                className="salem-gradient-btn text-white font-bold px-6 py-3 rounded-xl shadow-lg cursor-pointer text-xs flex items-center gap-2 disabled:opacity-50"
+              >
+                <span>{isSavingBackend ? "⏳ Procesando..." : "🚀 Guardar y Publicar en la Web"}</span>
+              </button>
+            </div>
+
+            {/* Descarga Manual de Archivos de Código */}
+            <div className="p-4 bg-[#FAF7F2] border border-[#E8E1D5] rounded-2xl">
+              <span className="font-bold text-stone-800 block mb-1">📥 Descargar Copias Físicas de Código</span>
+              <p className="text-[11px] text-stone-500 mb-3">
+                Si querés tener los archivos de código en tu computadora para tu tranquilidad:
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={handleExportProductsFile}
+                  className="bg-white hover:bg-stone-100 border border-stone-300 text-stone-800 font-bold px-3 py-2 rounded-xl text-[11px] flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span>products.js</span>
+                </button>
                 <button
                   onClick={handleExportConfigFile}
-                  className="bg-stone-900 hover:bg-stone-800 text-white font-bold px-3 py-2 rounded-xl text-[11px] flex items-center gap-1.5 cursor-pointer"
+                  className="bg-white hover:bg-stone-100 border border-stone-300 text-stone-800 font-bold px-3 py-2 rounded-xl text-[11px] flex items-center gap-1.5 cursor-pointer"
                 >
-                  <span>📥 Descargar config.js</span>
+                  <span>config.js</span>
+                </button>
+                <button
+                  onClick={handleCopyProductsCode}
+                  className="bg-white hover:bg-stone-100 border border-stone-300 text-stone-800 font-bold px-2.5 py-2 rounded-xl text-[11px] flex items-center gap-1 cursor-pointer"
+                >
+                  <Icons.Copy className="w-3.5 h-3.5" />
+                  <span>Copiar Código</span>
                 </button>
                 <button
                   onClick={handleResetDefaults}
-                  className="text-rose-600 hover:text-rose-800 font-bold underline text-[11px] cursor-pointer ml-2"
+                  className="text-rose-600 hover:text-rose-800 font-bold underline text-[11px] cursor-pointer ml-auto"
                 >
                   Restablecer de fábrica
                 </button>
               </div>
-
-              <button
-                onClick={() => {
-                  setIsAdminOpen(false);
-                  addToast({ title: "Datos de cobro guardados", description: "Los datos de transferencia ya están activos en el checkout.", type: "success" });
-                }}
-                className="salem-gradient-btn text-white font-bold px-5 py-2.5 rounded-xl shadow-md cursor-pointer"
-              >
-                Guardar y Cerrar
-              </button>
             </div>
           </div>
         )}
@@ -3710,7 +4074,7 @@ function AdminModal() {
                 <h4 className="font-display font-black text-lg text-stone-900">
                   {isNewProduct ? "➕ Agregar Nueva Prenda" : "✏️ Editar Prenda"}
                 </h4>
-                <button onClick={() => setProductModalOpen(false)} className="p-1.5 text-stone-400 hover:text-stone-900">
+                <button onClick={() => setProductModalOpen(false)} className="p-1.5 text-stone-400 hover:text-stone-900 cursor-pointer">
                   <Icons.X className="w-5 h-5" />
                 </button>
               </div>
@@ -3865,13 +4229,13 @@ function AdminModal() {
                   <button
                     type="button"
                     onClick={() => setProductModalOpen(false)}
-                    className="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold py-2.5 rounded-xl"
+                    className="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold py-2.5 rounded-xl cursor-pointer"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 salem-gradient-btn text-white font-bold py-2.5 rounded-xl shadow-md"
+                    className="flex-1 salem-gradient-btn text-white font-bold py-2.5 rounded-xl shadow-md cursor-pointer"
                   >
                     Guardar Prenda
                   </button>

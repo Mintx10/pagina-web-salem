@@ -15,5 +15,9 @@
     "tienda-ropa"
   ],
   "author": "Indumentaria Salem",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.24.0",
+    "@babel/preset-react": "^7.23.3"
+  }
 }
