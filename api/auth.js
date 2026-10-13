@@ -1,9 +1,6 @@
 const crypto = require('crypto');
 
-// Clave secreta para firmar sesiones (usa variable de entorno o fallback fijo seguro)
 const JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'salem_secret_jwt_key_2026_indumentaria_salem_secure';
-
-// Contraseña maestra por defecto (puede sobreescribirse con variable de entorno ADMIN_PASSWORD)
 const DEFAULT_ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'contacto@indumentariasalem.com.ar';
 const DEFAULT_ADMIN_PASS = process.env.ADMIN_PASSWORD || 'salem2026';
 
@@ -24,7 +21,6 @@ function verifyToken(token) {
     const timestamp = parseInt(parts[1], 10);
     const providedHmac = parts.slice(2).join(':');
 
-    // Validez de sesión: 30 días
     if (Date.now() - timestamp > 30 * 24 * 60 * 60 * 1000) {
       return false;
     }
@@ -36,48 +32,64 @@ function verifyToken(token) {
   }
 }
 
+function sendJson(res, statusCode, data) {
+  res.statusCode = statusCode;
+  res.setHeader('Content-Type', 'application/json');
+  return res.end(JSON.stringify(data));
+}
+
+async function parseBody(req) {
+  if (req.body && typeof req.body === 'object') return req.body;
+  if (typeof req.body === 'string') {
+    try { return JSON.parse(req.body); } catch (e) { return {}; }
+  }
+  return new Promise((resolve) => {
+    let raw = '';
+    req.on('data', chunk => { raw += chunk; });
+    req.on('end', () => {
+      try { resolve(JSON.parse(raw)); } catch (e) { resolve({}); }
+    });
+    req.on('error', () => resolve({}));
+  });
+}
+
 module.exports = async function handler(req, res) {
-  // Configurar CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    res.statusCode = 200;
+    return res.end();
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Método no permitido' });
+    return sendJson(res, 405, { error: 'Método no permitido' });
   }
 
   try {
-    const body = req.body || {};
+    const body = await parseBody(req);
     const { action = 'login', email, password, token, customMasterPassword } = body;
 
-    // Verificar token existente
     if (action === 'verify') {
       const isValid = verifyToken(token);
-      return res.status(200).json({ valid: isValid });
+      return sendJson(res, 200, { valid: isValid });
     }
 
-    // Inicio de sesión
     if (action === 'login') {
       const cleanEmail = (email || '').trim().toLowerCase();
       const cleanPass = (password || '').trim();
-
-      // Permitir login con la contraseña maestra de entorno o la configurada
       const validPass = customMasterPassword || DEFAULT_ADMIN_PASS;
 
-      // Puede ingresar con el email del showroom, con 'admin' o con su usuario
       const isEmailValid = cleanEmail === DEFAULT_ADMIN_EMAIL.toLowerCase() || 
                            cleanEmail === 'admin' || 
                            cleanEmail === 'salem' || 
                            cleanEmail.includes('salem') || 
-                           cleanEmail.length > 3;
+                           cleanEmail.length > 2;
 
       if (isEmailValid && cleanPass === validPass) {
         const sessionToken = signToken(cleanEmail);
-        return res.status(200).json({
+        return sendJson(res, 200, {
           success: true,
           token: sessionToken,
           user: {
@@ -87,16 +99,16 @@ module.exports = async function handler(req, res) {
           }
         });
       } else {
-        return res.status(401).json({
+        return sendJson(res, 401, {
           success: false,
           error: 'Credenciales incorrectas. Verificá tu usuario y contraseña de administradora.'
         });
       }
     }
 
-    return res.status(400).json({ error: 'Acción inválida' });
+    return sendJson(res, 400, { error: 'Acción inválida' });
   } catch (error) {
     console.error('Auth error:', error);
-    return res.status(500).json({ error: 'Error interno en la autenticación' });
+    return sendJson(res, 500, { error: 'Error interno en la autenticación: ' + error.message });
   }
 };

@@ -4,17 +4,24 @@ const path = require('path');
 const GITHUB_REPO = process.env.GITHUB_REPO || 'Mintx10/pagina-web-salem';
 const GITHUB_BRANCH = process.env.GITHUB_BRANCH || 'main';
 
+function sendJson(res, statusCode, data) {
+  res.statusCode = statusCode;
+  res.setHeader('Content-Type', 'application/json');
+  return res.end(JSON.stringify(data));
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    res.statusCode = 200;
+    return res.end();
   }
 
   if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Método no permitido. Utilizar GET.' });
+    return sendJson(res, 405, { error: 'Método no permitido. Utilizar GET.' });
   }
 
   try {
@@ -35,9 +42,7 @@ module.exports = async function handler(req, res) {
         settings = await cfgRes.json();
         source = 'github_live';
       }
-    } catch (netErr) {
-      // Fallback a archivos locales si no hay conexión o no existe todavía el JSON en GitHub
-    }
+    } catch (netErr) {}
 
     // 2. Si no se obtuvo de GitHub, intentar leer desde archivos locales en el repositorio
     if (!products) {
@@ -58,7 +63,7 @@ module.exports = async function handler(req, res) {
       } catch (e) {}
     }
 
-    return res.status(200).json({
+    return sendJson(res, 200, {
       success: true,
       source,
       products,
@@ -68,7 +73,7 @@ module.exports = async function handler(req, res) {
 
   } catch (error) {
     console.error('Error al obtener datos en /api/data:', error);
-    return res.status(500).json({
+    return sendJson(res, 500, {
       success: false,
       error: 'Error interno al cargar datos del catálogo: ' + error.message
     });
