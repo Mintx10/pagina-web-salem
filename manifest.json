@@ -1,0 +1,27 @@
+{
+  "name": "Jeans SLM ✨ | Indumentaria Salem",
+  "short_name": "Jeans SLM",
+  "description": "Tienda oficial de Jeans SLM e Indumentaria Salem. Vestí con estilo, sentite única.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FAF7F2",
+  "theme_color": "#db2777",
+  "orientation": "portrait-primary",
+  "lang": "es",
+  "categories": ["shopping", "lifestyle"],
+  "icons": [
+    {
+      "src": "brand/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "brand/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

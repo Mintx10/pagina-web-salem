@@ -12,8 +12,14 @@
     <meta property="og:image" content="brand/logo.png" />
     <meta property="og:type" content="website" />
 
-    <!-- Favicon -->
+    <!-- Favicon & PWA Icons -->
     <link rel="icon" type="image/png" href="brand/logo.png" />
+    <link rel="apple-touch-icon" href="brand/logo.png" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#db2777" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Jeans SLM" />
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -103,5 +109,14 @@
 
     <!-- Código React Precompilado de la App (Ejecuta directo) -->
     <script src="app.bundle.js"></script>
+
+    <!-- Service Worker PWA -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js').catch(function() {});
+        });
+      }
+    </script>
   </body>
 </html>

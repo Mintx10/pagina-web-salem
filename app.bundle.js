@@ -524,6 +524,8 @@ function StoreProvider({
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isPaymentMethodsOpen, setIsPaymentMethodsOpen] = useState(false);
   const [activePaymentProduct, setActivePaymentProduct] = useState(null);
+  const [activeStory, setActiveStory] = useState(null);
+  const [activeStorySlide, setActiveStorySlide] = useState(0);
   const [shippingZip, setShippingZip] = useState(() => {
     return localStorage.getItem("salem_shipping_zip") || "";
   });
@@ -1017,6 +1019,10 @@ function StoreProvider({
     setIsPaymentMethodsOpen,
     activePaymentProduct,
     setActivePaymentProduct,
+    activeStory,
+    setActiveStory,
+    activeStorySlide,
+    setActiveStorySlide,
     orders,
     setOrders,
     createOrder,
@@ -1566,6 +1572,164 @@ function Hero() {
   }), /*#__PURE__*/React.createElement("span", null, "Ver Detalles")))))))));
 }
 
+// Datos de Stories Interactivas estilo Instagram
+const STORIES_DATA = [{
+  id: "drops",
+  title: "Drops 2026",
+  emoji: "🔥",
+  avatar: "brand/logo.png",
+  slides: [{
+    id: "d1",
+    image: "products/wide-leg.png",
+    title: "Colección 2026 • Drops Semanales",
+    subtitle: "Prendas confeccionadas con denim de autor y calce fit que estiliza la figura.",
+    badge: "NUEVO DROP",
+    productId: "slm-jean-wide-leg",
+    buttonText: "Ver Jean Wide Leg ⭐"
+  }, {
+    id: "d2",
+    image: "products/corset-denim.png",
+    title: "Corsets & Tops Exclusivos",
+    subtitle: "Ballenas reforzadas y escote estructurado para looks de día y de noche.",
+    badge: "TENDENCIA",
+    productId: "slm-corset-denim",
+    buttonText: "Ver Corset Denim 🌸"
+  }]
+}, {
+  id: "jeans",
+  title: "Jeans Fit",
+  emoji: "👖",
+  avatar: "products/wide-leg.png",
+  slides: [{
+    id: "j1",
+    image: "products/wide-leg.png",
+    title: "Jean Wide Leg Rígido Celeste",
+    subtitle: "100% Algodón, tiro bien alto y botamanga ancha relajada. El calce más pedido.",
+    badge: "MÁS VENDIDO",
+    productId: "slm-jean-wide-leg",
+    buttonText: "Comprar Wide Leg ✨"
+  }, {
+    id: "j2",
+    image: "products/cargo-vintage.png",
+    title: "Pantalón Cargo Vintage",
+    subtitle: "Bolsillos fuelle laterales funcionales y calce urbano súper cómodo.",
+    badge: "URBAN STYLE",
+    productId: "slm-cargo-vintage",
+    buttonText: "Comprar Cargo 👖"
+  }]
+}, {
+  id: "corsets",
+  title: "Corsets",
+  emoji: "🌸",
+  avatar: "products/corset-denim.png",
+  slides: [{
+    id: "c1",
+    image: "products/corset-denim.png",
+    title: "Corset Denim Strapless",
+    subtitle: "Espalda elastizada regulable con ojales metálicos reforzados.",
+    badge: "FAVORITO SLM",
+    productId: "slm-corset-denim",
+    buttonText: "Ver Corset Strapless ❤️"
+  }, {
+    id: "c2",
+    image: "products/top-bando.png",
+    title: "Top Bandó Fruncido Negro",
+    subtitle: "Doble tela que no transparenta con textura canalé suave.",
+    badge: "BÁSICO PREMIUM",
+    productId: "slm-top-bando",
+    buttonText: "Ver Top Bandó ✨"
+  }]
+}, {
+  id: "camperas",
+  title: "Camperas",
+  emoji: "🧥",
+  avatar: "products/parca-denim.png",
+  slides: [{
+    id: "ca1",
+    image: "products/parca-denim.png",
+    title: "Parca Oversized Denim",
+    subtitle: "Interior forrado en corderito suave para máximo abrigo con estilo.",
+    badge: "ABRIGO SALEM",
+    productId: "slm-parca-denim",
+    buttonText: "Ver Parca Denim 🧥"
+  }, {
+    id: "ca2",
+    image: "products/chaleco-sastrero.png",
+    title: "Chaleco Denim Sastrero",
+    subtitle: "Corte entallado con botones metálicos y espalda regulable.",
+    badge: "MUST HAVE",
+    productId: "slm-chaleco-sastrero",
+    buttonText: "Ver Chaleco Sastrero ✨"
+  }]
+}, {
+  id: "mayorista",
+  title: "Mayorista",
+  emoji: "📦",
+  avatar: "brand/logo.png",
+  slides: [{
+    id: "m1",
+    image: "brand/instagram-feed.jpg",
+    title: "Venta Mayorista a Todo el País",
+    subtitle: "Mínimo accesible, curva de talles completa y envíos a todo el país por expreso o correo.",
+    badge: "REVENDEDORAS",
+    actionType: "wholesale",
+    buttonText: "Pedir Catálogo Mayorista 📦"
+  }]
+}, {
+  id: "clientas",
+  title: "Comunidad",
+  emoji: "❤️",
+  avatar: "brand/instagram-feed.jpg",
+  slides: [{
+    id: "cl1",
+    image: "brand/instagram-feed.jpg",
+    title: "Comunidad Jeans SLM",
+    subtitle: "Más de 3.900 seguidoras en Instagram eligen el calce Salem todos los días.",
+    badge: "#SALEMGIRLS",
+    actionType: "instagram",
+    buttonText: "Ver Instagram @jeans_slm 📸"
+  }]
+}];
+
+// --- BARRA DE STORIES INTERACTIVAS ESTILO INSTAGRAM ---
+function StoriesBar() {
+  const {
+    setActiveStory,
+    setActiveStorySlide
+  } = useStore();
+  const handleOpenStory = story => {
+    setActiveStory(story);
+    setActiveStorySlide(0);
+  };
+  return /*#__PURE__*/React.createElement("section", {
+    className: "bg-white border-b border-[#E8E1D5] py-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-4 sm:gap-7 overflow-x-auto scrollbar-none py-1"
+  }, STORIES_DATA.map(story => /*#__PURE__*/React.createElement("button", {
+    key: story.id,
+    onClick: () => handleOpenStory(story),
+    className: "flex flex-col items-center gap-1.5 shrink-0 group cursor-pointer focus:outline-none"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "relative p-[2.5px] rounded-full bg-gradient-to-tr from-amber-400 via-pink-500 to-fuchsia-600 group-hover:scale-105 transition-transform duration-300 shadow-xs"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "p-0.5 bg-white rounded-full"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "w-16 h-16 sm:w-18 sm:h-18 rounded-full overflow-hidden bg-stone-100 flex items-center justify-center relative"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: story.avatar,
+    alt: story.title,
+    className: "w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "absolute inset-0 bg-pink-500/10 group-hover:bg-transparent transition-colors"
+  }))), /*#__PURE__*/React.createElement("span", {
+    className: "absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white shadow-md border border-stone-200 flex items-center justify-center text-xs"
+  }, story.emoji)), /*#__PURE__*/React.createElement("span", {
+    className: "text-[11px] sm:text-xs font-bold text-stone-800 group-hover:text-pink-600 transition-colors whitespace-nowrap"
+  }, story.title))))));
+}
+
 // --- PILARES DE CONFIANZA Y BENEFICIOS ---
 function BenefitsBar() {
   const {
@@ -1893,7 +2057,10 @@ function QuickViewModal() {
     setShippingZip,
     calculateShippingQuotes,
     setIsPaymentMethodsOpen,
-    setActivePaymentProduct
+    setActivePaymentProduct,
+    products,
+    setIsCartOpen,
+    addToast
   } = useStore();
   const [activeImgIdx, setActiveImgIdx] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
@@ -1934,6 +2101,34 @@ function QuickViewModal() {
   const handleWhatsAppDirect = () => {
     const text = encodeURIComponent(`Hola Salem! 🐈‍⬛ Quiero consultar / comprar:\n- ${quickViewProduct.title}\n- Talle: ${selectedSize}\n- Color: ${selectedColor}\n- Precio: ${formatPrice(currentPrice)}\n¿Tienen disponibilidad para envío?`);
     window.open(`${settings.whatsappUrl}?text=${text}`, "_blank");
+  };
+
+  // Prenda sugerida para armar el Look / Outfit completo
+  const matchingLookProduct = useMemo(() => {
+    if (!quickViewProduct || !products || products.length <= 1) return null;
+    const cat = quickViewProduct.category;
+    let targetCat = "corsets";
+    if (cat === "corsets") targetCat = "jeans";else if (cat === "jeans") targetCat = "corsets";else if (cat === "camperas") targetCat = "jeans";else if (cat === "faldas") targetCat = "corsets";
+    const match = products.find(p => p.id !== quickViewProduct.id && p.category === targetCat);
+    return match || products.find(p => p.id !== quickViewProduct.id);
+  }, [quickViewProduct, products]);
+  const matchPrice = matchingLookProduct ? matchingLookProduct.promoPrice || matchingLookProduct.price : 0;
+  const comboLookPrice = matchingLookProduct ? Math.round((currentPrice + matchPrice) * 0.9) : 0;
+  const comboOriginalPrice = matchingLookProduct ? currentPrice + matchPrice : 0;
+  const comboSavings = comboOriginalPrice - comboLookPrice;
+  const handleAddComboToCart = () => {
+    if (!matchingLookProduct) return;
+    addToCart(quickViewProduct, selectedSize, selectedColor, quantity);
+    const matchSize = matchingLookProduct.sizes?.[0]?.size || "Único";
+    const matchColor = matchingLookProduct.colors?.[0]?.name || "Original";
+    addToCart(matchingLookProduct, matchSize, matchColor, 1);
+    addToast({
+      title: "¡Outfit Salem Agregado! ✨",
+      description: `Sumaste ${quickViewProduct.title} + ${matchingLookProduct.title} con 10% OFF EXTRA.`,
+      type: "success"
+    });
+    setQuickViewProduct(null);
+    setIsCartOpen(true);
   };
   return /*#__PURE__*/React.createElement("div", {
     className: "fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-fade-in"
@@ -2106,7 +2301,43 @@ function QuickViewModal() {
     className: "text-[10px] text-stone-500"
   }, opt.days)), /*#__PURE__*/React.createElement("span", {
     className: `font-black text-xs shrink-0 ${opt.isFree && opt.cost === 0 ? "text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md" : "text-stone-900"}`
-  }, opt.cost === 0 ? "¡GRATIS! 🎉" : formatPrice(opt.cost))))))), /*#__PURE__*/React.createElement("div", {
+  }, opt.cost === 0 ? "¡GRATIS! 🎉" : formatPrice(opt.cost))))))), matchingLookProduct && /*#__PURE__*/React.createElement("div", {
+    className: "p-3.5 rounded-2xl bg-gradient-to-r from-pink-50 via-rose-50/70 to-pink-50/50 border border-pink-200/90 mb-4 shadow-2xs"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between mb-2"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-xs font-black text-pink-900 flex items-center gap-1.5"
+  }, /*#__PURE__*/React.createElement(Icons.Sparkles, {
+    className: "w-3.5 h-3.5 text-pink-600"
+  }), /*#__PURE__*/React.createElement("span", null, "Complet\xE1 el Outfit con 10% OFF Extra")), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] font-black bg-pink-600 text-white px-2 py-0.5 rounded-full"
+  }, "COMBO SALEM")), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-3 bg-white p-2.5 rounded-xl border border-pink-100"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: matchingLookProduct.images?.[0] || matchingLookProduct.image,
+    alt: matchingLookProduct.title,
+    className: "w-12 h-16 object-cover rounded-lg border border-stone-200 shrink-0 bg-stone-100"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 min-w-0"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] font-bold text-pink-600 uppercase tracking-wider block"
+  }, "Combin\xE1 perfecto con:"), /*#__PURE__*/React.createElement("h5", {
+    className: "font-display font-bold text-xs text-stone-900 truncate"
+  }, matchingLookProduct.title), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-wrap items-baseline gap-1.5 mt-0.5"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-xs font-black text-stone-900"
+  }, formatPrice(comboLookPrice)), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-stone-400 line-through"
+  }, formatPrice(comboOriginalPrice)), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded"
+  }, "Ahorr\xE1s ", formatPrice(comboSavings))))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: handleAddComboToCart,
+    className: "w-full mt-2.5 bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs py-2.5 rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+  }, /*#__PURE__*/React.createElement(Icons.ShoppingBag, {
+    className: "w-3.5 h-3.5 text-pink-400"
+  }), /*#__PURE__*/React.createElement("span", null, "Sumar Outfit Completo al Carrito (-10% OFF)"))), /*#__PURE__*/React.createElement("div", {
     className: "border-t border-stone-200 pt-3"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex border-b border-stone-200 gap-4 text-xs font-bold text-stone-500 mb-3"
@@ -3340,6 +3571,302 @@ function SocialProofToast() {
   }, /*#__PURE__*/React.createElement(Icons.X, {
     className: "w-3.5 h-3.5"
   }))));
+}
+
+// --- MODAL DE HISTORIAS INTERACTIVAS (INSTAGRAM REEL / STORY VIEWER) ---
+function StoryViewerModal() {
+  const {
+    activeStory,
+    setActiveStory,
+    activeStorySlide,
+    setActiveStorySlide,
+    products,
+    setQuickViewProduct,
+    setIsWholesaleModalOpen
+  } = useStore();
+  const [progress, setProgress] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  // Reset progress when slide or story changes
+  useEffect(() => {
+    setProgress(0);
+  }, [activeStory, activeStorySlide]);
+
+  // Manejo de avance automático por temporizador (~4.5 segundos por slide)
+  useEffect(() => {
+    if (!activeStory || isPaused) return;
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          handleNextSlide();
+          return 0;
+        }
+        return prev + 1.25;
+      });
+    }, 50);
+    return () => clearInterval(interval);
+  }, [activeStory, activeStorySlide, isPaused]);
+
+  // Teclado (Escape para salir, flechas para navegar)
+  useEffect(() => {
+    if (!activeStory) return;
+    const handleKeyDown = e => {
+      if (e.key === "Escape") setActiveStory(null);
+      if (e.key === "ArrowRight") handleNextSlide();
+      if (e.key === "ArrowLeft") handlePrevSlide();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeStory, activeStorySlide]);
+  if (!activeStory) return null;
+  const currentStoryIndex = STORIES_DATA.findIndex(s => s.id === activeStory.id);
+  const totalSlides = activeStory.slides.length;
+  const slide = activeStory.slides[activeStorySlide] || activeStory.slides[0];
+  const handleNextSlide = () => {
+    if (activeStorySlide < totalSlides - 1) {
+      setActiveStorySlide(activeStorySlide + 1);
+    } else {
+      // Pasar a la siguiente historia si existe, sino cerrar
+      if (currentStoryIndex < STORIES_DATA.length - 1) {
+        setActiveStory(STORIES_DATA[currentStoryIndex + 1]);
+        setActiveStorySlide(0);
+      } else {
+        setActiveStory(null);
+      }
+    }
+  };
+  const handlePrevSlide = () => {
+    if (activeStorySlide > 0) {
+      setActiveStorySlide(activeStorySlide - 1);
+    } else {
+      // Retroceder a la historia anterior si existe
+      if (currentStoryIndex > 0) {
+        const prevStory = STORIES_DATA[currentStoryIndex - 1];
+        setActiveStory(prevStory);
+        setActiveStorySlide(prevStory.slides.length - 1);
+      }
+    }
+  };
+  const matchedProduct = slide.productId ? products.find(p => p.id === slide.productId) : null;
+  const handleActionClick = e => {
+    e.stopPropagation();
+    setActiveStory(null);
+    if (slide.actionType === "wholesale") {
+      setIsWholesaleModalOpen(true);
+    } else if (slide.actionType === "instagram") {
+      window.open("https://instagram.com/jeans_slm", "_blank");
+    } else if (matchedProduct) {
+      setQuickViewProduct(matchedProduct);
+    }
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-0 sm:p-4 select-none animate-fade-in",
+    onClick: () => setActiveStory(null)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "relative w-full h-full sm:max-w-sm sm:h-[86vh] sm:rounded-3xl overflow-hidden shadow-2xl flex flex-col bg-stone-900 border border-stone-800",
+    onClick: e => e.stopPropagation(),
+    onMouseDown: () => setIsPaused(true),
+    onMouseUp: () => setIsPaused(false),
+    onTouchStart: () => setIsPaused(true),
+    onTouchEnd: () => setIsPaused(false)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "absolute top-3 inset-x-3 z-30 flex items-center gap-1.5"
+  }, activeStory.slides.map((_, idx) => {
+    let widthPercent = 0;
+    if (idx < activeStorySlide) widthPercent = 100;else if (idx === activeStorySlide) widthPercent = Math.min(progress, 100);
+    return /*#__PURE__*/React.createElement("div", {
+      key: idx,
+      className: "h-1 flex-1 bg-white/30 rounded-full overflow-hidden backdrop-blur-xs"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "h-full bg-white transition-all duration-75",
+      style: {
+        width: `${widthPercent}%`
+      }
+    }));
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "absolute top-6 inset-x-4 z-30 flex items-center justify-between text-white drop-shadow"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2.5"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "w-9 h-9 rounded-full ring-2 ring-pink-500 overflow-hidden bg-stone-800 p-0.5"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: activeStory.avatar,
+    alt: activeStory.title,
+    className: "w-full h-full object-cover rounded-full"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-1.5 font-bold text-sm tracking-wide leading-tight"
+  }, /*#__PURE__*/React.createElement("span", null, activeStory.title), /*#__PURE__*/React.createElement("span", null, activeStory.emoji)), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-stone-300 font-medium"
+  }, "Jeans SLM \u2022 Hace instantes"))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setActiveStory(null),
+    className: "w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-colors cursor-pointer"
+  }, /*#__PURE__*/React.createElement(Icons.X, {
+    className: "w-4 h-4"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "absolute inset-0 z-0 bg-stone-950 flex items-center justify-center"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: slide.image,
+    alt: slide.title,
+    className: "w-full h-full object-cover"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/50 pointer-events-none"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "absolute inset-y-0 left-0 w-1/3 z-10 cursor-pointer",
+    onClick: handlePrevSlide,
+    title: "Historia anterior"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "absolute inset-y-0 right-0 w-2/3 z-10 cursor-pointer",
+    onClick: handleNextSlide,
+    title: "Siguiente historia"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "absolute bottom-0 inset-x-0 z-20 p-5 pt-8 flex flex-col gap-2.5"
+  }, slide.badge && /*#__PURE__*/React.createElement("span", {
+    className: "self-start text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full bg-pink-500/90 text-white shadow-md border border-pink-400/40"
+  }, slide.badge), /*#__PURE__*/React.createElement("h3", {
+    className: "text-xl sm:text-2xl font-black text-white leading-tight drop-shadow-md"
+  }, slide.title), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs sm:text-sm text-stone-200 line-clamp-2 leading-relaxed drop-shadow font-light"
+  }, slide.subtitle), matchedProduct && /*#__PURE__*/React.createElement("div", {
+    onClick: handleActionClick,
+    className: "mt-1 bg-white/15 backdrop-blur-md border border-white/25 rounded-2xl p-2.5 flex items-center justify-between gap-3 hover:bg-white/25 transition-all cursor-pointer group"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2.5 min-w-0"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: matchedProduct.image,
+    alt: matchedProduct.title,
+    className: "w-10 h-10 rounded-xl object-cover border border-white/30 shrink-0"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "min-w-0"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-xs font-bold text-white truncate"
+  }, matchedProduct.title), /*#__PURE__*/React.createElement("div", {
+    className: "text-[11px] font-extrabold text-pink-300"
+  }, "$", matchedProduct.price.toLocaleString("es-AR")))), /*#__PURE__*/React.createElement("span", {
+    className: "px-3 py-1.5 rounded-xl bg-pink-500 group-hover:bg-pink-600 text-white text-xs font-bold shrink-0 transition-colors shadow-md"
+  }, "Ver Prenda \u2728")), !matchedProduct && slide.buttonText && /*#__PURE__*/React.createElement("button", {
+    onClick: handleActionClick,
+    className: "mt-1 w-full py-3 px-4 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold text-sm shadow-lg shadow-pink-500/30 flex items-center justify-center gap-2 transition-transform active:scale-95 cursor-pointer"
+  }, /*#__PURE__*/React.createElement("span", null, slide.buttonText), /*#__PURE__*/React.createElement(Icons.ChevronRight, {
+    className: "w-4 h-4"
+  })))));
+}
+
+// --- BANNER DE INSTALACIÓN PWA (APP PARA CELULARES) ---
+function PWAInstallBanner() {
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showBanner, setShowBanner] = useState(false);
+  const [isIos, setIsIos] = useState(false);
+  const [showIosInstructions, setShowIosInstructions] = useState(false);
+  const {
+    addToast
+  } = useStore();
+  useEffect(() => {
+    // Si el usuario ya descartó el banner en esta sesión / navegador, no molestar
+    const isDismissed = localStorage.getItem("salem_pwa_dismissed");
+    if (isDismissed) return;
+
+    // Detectar si ya está instalada o en standalone mode
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+    if (isStandalone) return;
+
+    // Detectar iOS Safari
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const isIosDevice = /iphone|ipad|ipod/.test(userAgent) && !window.MSStream;
+    setIsIos(isIosDevice);
+    if (isIosDevice) {
+      // En iOS Safari mostramos el banner después de 4 segundos
+      const timer = setTimeout(() => {
+        setShowBanner(true);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+
+    // En Android / Chrome / Edge escuchamos beforeinstallprompt
+    const handleBeforeInstallPrompt = e => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowBanner(true);
+    };
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    };
+  }, []);
+  const handleInstallClick = async () => {
+    if (isIos) {
+      setShowIosInstructions(true);
+      return;
+    }
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const {
+      outcome
+    } = await deferredPrompt.userChoice;
+    if (outcome === "accepted") {
+      addToast("¡Gracias por instalar Jeans SLM en tu celular! ✨", "success");
+      setShowBanner(false);
+    }
+    setDeferredPrompt(null);
+  };
+  const handleDismiss = () => {
+    setShowBanner(false);
+    localStorage.setItem("salem_pwa_dismissed", "true");
+  };
+  if (!showBanner) return null;
+  return /*#__PURE__*/React.createElement("aside", {
+    "aria-label": "Instalar aplicaci\xF3n",
+    className: "fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-40 max-w-[360px] animate-slide-up"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-white/95 backdrop-blur-md border-2 border-pink-200 rounded-3xl p-4 shadow-2xl relative"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: handleDismiss,
+    className: "absolute top-2.5 right-2.5 p-1 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer",
+    title: "Cerrar"
+  }, /*#__PURE__*/React.createElement(Icons.X, {
+    className: "w-4 h-4"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-start gap-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "w-12 h-12 rounded-2xl bg-gradient-to-tr from-pink-500 to-rose-500 p-0.5 shadow-md shrink-0 flex items-center justify-center"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: "brand/logo.png",
+    alt: "Jeans SLM",
+    className: "w-full h-full object-cover rounded-[14px]",
+    onError: e => {
+      e.target.style.display = "none";
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 pr-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-1.5"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] font-bold text-pink-600 uppercase tracking-wider bg-pink-50 px-2 py-0.5 rounded-full border border-pink-200"
+  }, "App Oficial")), /*#__PURE__*/React.createElement("h4", {
+    className: "font-display font-bold text-sm text-stone-900 mt-1"
+  }, "Instal\xE1 Jeans SLM en tu celu \uD83D\uDCF2"), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs text-stone-500 mt-0.5 leading-snug"
+  }, "Compr\xE1 m\xE1s r\xE1pido, guard\xE1 tus favoritos y recib\xED ofertas exclusivas."))), showIosInstructions ? /*#__PURE__*/React.createElement("div", {
+    className: "mt-3 p-3 rounded-2xl bg-stone-50 border border-stone-200 text-xs text-stone-700 space-y-1.5 animate-fade-in"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "font-bold text-stone-900 flex items-center gap-1.5"
+  }, /*#__PURE__*/React.createElement("span", null, "Para instalar en iPhone:")), /*#__PURE__*/React.createElement("p", {
+    className: "text-stone-600"
+  }, "1. Toc\xE1 el bot\xF3n ", /*#__PURE__*/React.createElement("strong", null, "Compartir"), " (icono de cuadrado con flecha \u238B) abajo en Safari."), /*#__PURE__*/React.createElement("p", {
+    className: "text-stone-600"
+  }, "2. Seleccion\xE1 ", /*#__PURE__*/React.createElement("strong", null, "\"Agregar a pantalla de inicio\" \u2795"), "."), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setShowIosInstructions(false),
+    className: "text-pink-600 font-bold hover:underline text-xs pt-1 block"
+  }, "Entendido")) : /*#__PURE__*/React.createElement("div", {
+    className: "mt-3.5 flex items-center gap-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: handleInstallClick,
+    className: "flex-1 py-2.5 px-3 rounded-xl bg-pink-500 hover:bg-pink-600 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+  }, /*#__PURE__*/React.createElement("span", null, "Instalar Gratis"), /*#__PURE__*/React.createElement(Icons.Sparkles, {
+    className: "w-3.5 h-3.5"
+  })), /*#__PURE__*/React.createElement("button", {
+    onClick: handleDismiss,
+    className: "py-2.5 px-3 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-600 font-medium text-xs transition-colors cursor-pointer"
+  }, "Ahora no"))));
 }
 
 // --- MODAL LEGAL & BOTÓN DE ARREPENTIMIENTO ---
@@ -5286,7 +5813,7 @@ function App() {
     className: "min-h-screen flex flex-col bg-[#FAF7F2] text-[#1C1917] selection:bg-pink-200 selection:text-pink-900"
   }, /*#__PURE__*/React.createElement(AnnouncementBar, null), /*#__PURE__*/React.createElement(Navbar, null), /*#__PURE__*/React.createElement("main", {
     className: "flex-1"
-  }, currentView === "home" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Hero, null), /*#__PURE__*/React.createElement(BenefitsBar, null), /*#__PURE__*/React.createElement(CategoryTabs, null), /*#__PURE__*/React.createElement(CatalogSection, null), /*#__PURE__*/React.createElement(InstagramFeedSection, null)) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CategoryTabs, null), /*#__PURE__*/React.createElement(CatalogSection, null))), /*#__PURE__*/React.createElement(Footer, null), /*#__PURE__*/React.createElement(QuickViewModal, null), /*#__PURE__*/React.createElement(CartDrawer, null), /*#__PURE__*/React.createElement(CheckoutModal, null), /*#__PURE__*/React.createElement(WishlistModal, null), /*#__PURE__*/React.createElement(SizeGuideModal, null), /*#__PURE__*/React.createElement(WholesaleModal, null), /*#__PURE__*/React.createElement(LegalModal, null), /*#__PURE__*/React.createElement(AdminModal, null), /*#__PURE__*/React.createElement(PaymentMethodsModal, null), /*#__PURE__*/React.createElement(SocialProofToast, null), /*#__PURE__*/React.createElement(ToastContainer, null));
+  }, currentView === "home" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Hero, null), /*#__PURE__*/React.createElement(StoriesBar, null), /*#__PURE__*/React.createElement(BenefitsBar, null), /*#__PURE__*/React.createElement(CategoryTabs, null), /*#__PURE__*/React.createElement(CatalogSection, null), /*#__PURE__*/React.createElement(InstagramFeedSection, null)) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CategoryTabs, null), /*#__PURE__*/React.createElement(CatalogSection, null))), /*#__PURE__*/React.createElement(Footer, null), /*#__PURE__*/React.createElement(QuickViewModal, null), /*#__PURE__*/React.createElement(CartDrawer, null), /*#__PURE__*/React.createElement(CheckoutModal, null), /*#__PURE__*/React.createElement(WishlistModal, null), /*#__PURE__*/React.createElement(SizeGuideModal, null), /*#__PURE__*/React.createElement(WholesaleModal, null), /*#__PURE__*/React.createElement(LegalModal, null), /*#__PURE__*/React.createElement(AdminModal, null), /*#__PURE__*/React.createElement(PaymentMethodsModal, null), /*#__PURE__*/React.createElement(SocialProofToast, null), /*#__PURE__*/React.createElement(StoryViewerModal, null), /*#__PURE__*/React.createElement(PWAInstallBanner, null), /*#__PURE__*/React.createElement(ToastContainer, null));
 }
 
 // Componente Error Boundary para evitar pantallas en blanco
