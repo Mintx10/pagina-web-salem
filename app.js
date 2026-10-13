@@ -538,6 +538,14 @@ function StoreProvider({ children }) {
     return newOrder;
   };
 
+  const updateOrder = (orderNumber, updates) => {
+    setOrders(prev => prev.map(o => o.orderNumber === orderNumber ? { ...o, ...updates } : o));
+  };
+
+  const deleteOrder = (orderNumber) => {
+    setOrders(prev => prev.filter(o => o.orderNumber !== orderNumber));
+  };
+
   const value = {
     settings,
     setSettings,
@@ -611,7 +619,10 @@ function StoreProvider({ children }) {
     activePaymentProduct,
     setActivePaymentProduct,
     orders,
+    setOrders,
     createOrder,
+    updateOrder,
+    deleteOrder,
     toasts,
     addToast,
     removeToast
@@ -3678,6 +3689,166 @@ function LegalModal() {
   );
 }
 
+// --- MODAL DE ETIQUETA DE DESPACHO PARA PAQUETERÍA ---
+function ShippingLabelModal({ order, onClose }) {
+  const { settings, formatPrice, addToast } = useStore();
+
+  if (!order) return null;
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleCopyRawData = () => {
+    const rawText = 
+      `DATOS DE ENVÍO - PEDIDO #${order.orderNumber}\n` +
+      `Destinatario: ${order.customer.fullName}\n` +
+      `DNI: ${order.customer.dni || "Consignado"}\n` +
+      `Teléfono: ${order.customer.phone}\n` +
+      `Dirección: ${order.customer.address} ${order.customer.apartment ? "(Dpto: " + order.customer.apartment + ")" : ""}\n` +
+      `Localidad: ${order.customer.city}\n` +
+      `Código Postal: ${order.customer.postalCode || "-"}\n` +
+      `Transporte: ${order.shipping?.name || "Correo Argentino"}\n` +
+      `Notas: ${order.customer.notes || "Entregar en mano"}`;
+
+    navigator.clipboard.writeText(rawText);
+    addToast({
+      title: "¡Datos de envío copiados! 📋",
+      description: "Listos para pegar en la web de Correo Argentino o Andreani.",
+      type: "success"
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-fade-in bg-stone-900/60 backdrop-blur-sm">
+      <div className="relative z-10 w-full max-w-xl bg-white rounded-3xl border border-stone-300 shadow-2xl p-5 sm:p-7 text-stone-900 animate-slide-up max-h-[90vh] overflow-y-auto">
+        
+        {/* Header Modal */}
+        <div className="flex items-center justify-between pb-3 border-b border-stone-200 mb-4 print:hidden">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">🏷️</span>
+            <div>
+              <h4 className="font-display font-black text-lg text-stone-900">
+                Etiqueta Oficial de Despacho
+              </h4>
+              <p className="text-[11px] text-stone-500">
+                Formato estándar para pegar en el paquete de Correo Argentino / Andreani
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1.5 text-stone-400 hover:text-stone-900 cursor-pointer">
+            <Icons.X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* ETIQUETA FÍSICA IMPRIMIBLE */}
+        <div className="border-2 border-stone-900 rounded-2xl p-4 sm:p-5 bg-white text-stone-900 font-sans space-y-3.5 shadow-sm">
+          {/* Cabecera de la etiqueta */}
+          <div className="flex items-center justify-between border-b-2 border-stone-900 pb-3">
+            <div>
+              <span className="font-black text-base tracking-wider block">JEANS SLM ✨</span>
+              <span className="text-[10px] text-stone-600 uppercase font-bold tracking-widest">
+                {settings.brandSubtitle || "Indumentaria Salem"}
+              </span>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] uppercase font-bold tracking-wider bg-stone-900 text-white px-2 py-0.5 rounded">
+                E-COMMERCE PACK
+              </span>
+              <span className="font-mono text-xs font-black block mt-0.5">#{order.orderNumber}</span>
+            </div>
+          </div>
+
+          {/* Grilla Remitente y Destinatario */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            {/* REMITENTE */}
+            <div className="p-2.5 rounded-xl bg-stone-50 border border-stone-200 space-y-0.5">
+              <span className="text-[10px] font-black text-stone-500 uppercase tracking-wider block mb-1">
+                REMITENTE:
+              </span>
+              <strong className="block text-stone-900 font-bold">Indumentaria Salem / Jeans SLM</strong>
+              <p className="text-stone-600 text-[11px] leading-tight">
+                Showroom Palermo Soho, Gurruchaga 1750<br />
+                CABA (CP 1414) • Tel: {settings.whatsappPhone}
+              </p>
+            </div>
+
+            {/* DESTINATARIO */}
+            <div className="p-2.5 rounded-xl bg-pink-50/50 border border-pink-200 space-y-0.5">
+              <span className="text-[10px] font-black text-pink-700 uppercase tracking-wider block mb-1">
+                DESTINATARIO:
+              </span>
+              <strong className="block text-stone-900 text-sm font-extrabold">{order.customer.fullName}</strong>
+              <p className="text-stone-700 text-[11px] font-semibold">
+                DNI / CUIT: {order.customer.dni || "Consignado"}
+              </p>
+              <p className="text-stone-600 text-[11px] leading-tight">
+                {order.customer.address} {order.customer.apartment ? `(Piso/Dpto: ${order.customer.apartment})` : ""}<br />
+                <strong>{order.customer.city}</strong> • CP: <strong>{order.customer.postalCode || "-"}</strong><br />
+                Teléfono: <strong>{order.customer.phone}</strong>
+              </p>
+            </div>
+          </div>
+
+          {/* Detalles del paquete y entrega */}
+          <div className="border border-stone-200 rounded-xl p-2.5 bg-stone-50 text-[11px] space-y-1">
+            <div className="flex justify-between font-bold">
+              <span>Transporte: <span className="text-pink-700">{order.shipping?.name || "Correo Argentino"}</span></span>
+              <span>Seguimiento: <span className="font-mono text-stone-900">{order.trackingNumber || "S/N"}</span></span>
+            </div>
+            {order.customer.notes && (
+              <p className="text-stone-600 italic">
+                Nota de entrega: "{order.customer.notes}"
+              </p>
+            )}
+            <div className="pt-1 border-t border-stone-200 text-stone-500 truncate">
+              Prendas: {order.items?.map(it => `${it.title} (${it.size}) x${it.quantity}`).join(" • ")}
+            </div>
+          </div>
+
+          {/* Código de barras simulado */}
+          <div className="pt-2 text-center">
+            <div className="inline-block font-mono text-xs tracking-[6px] font-bold py-1 px-4 bg-stone-100 border border-stone-300 rounded">
+              ||| | |||| | ||| || ||| | |||
+            </div>
+            <span className="text-[9px] text-stone-400 font-mono block mt-0.5">
+              COD-{order.orderNumber}-{order.customer.postalCode || "0000"}
+            </span>
+          </div>
+        </div>
+
+        {/* Acciones */}
+        <div className="flex flex-wrap gap-2.5 pt-4 print:hidden">
+          <button
+            type="button"
+            onClick={handlePrint}
+            className="flex-1 salem-gradient-btn text-white font-bold py-2.5 px-4 rounded-xl shadow-md text-xs flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <span>🖨️ Imprimir Etiqueta</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleCopyRawData}
+            className="bg-white hover:bg-stone-50 border border-stone-300 text-stone-700 font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <span>📋 Copiar Datos de Envío</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="bg-stone-100 hover:bg-stone-200 text-stone-600 font-bold py-2.5 px-4 rounded-xl text-xs cursor-pointer"
+          >
+            Cerrar
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 // --- PANEL DE ADMINISTRACIÓN SALEM ---
 function AdminModal() {
   const {
@@ -3688,6 +3859,9 @@ function AdminModal() {
     products,
     setProducts,
     orders,
+    setOrders,
+    updateOrder,
+    deleteOrder,
     formatPrice,
     addToast,
     adminAuth,
@@ -3711,6 +3885,102 @@ function AdminModal() {
   const [githubTokenInput, setGithubTokenInput] = useState(adminAuth?.githubToken || "");
   const [isSavingBackend, setIsSavingBackend] = useState(false);
   const [backendSyncMsg, setBackendSyncMsg] = useState("");
+
+  // Estados Fase 2: Alertas de Stock, Buscador Admin, Etiquetas y Fotos
+  const [stockFilter, setStockFilter] = useState("all"); // 'all' | 'low'
+  const [productSearchQuery, setProductSearchQuery] = useState("");
+  const [shippingLabelOrder, setShippingLabelOrder] = useState(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const fileInputRef = useRef(null);
+
+  // Métricas rápidas calculadas
+  const totalRevenue = useMemo(() => orders.reduce((sum, o) => sum + (o.total || 0), 0), [orders]);
+  const lowStockCount = useMemo(() => products.filter(p => (p.stock || 0) <= 3).length, [products]);
+
+  // Lista filtrada de prendas para el panel
+  const adminFilteredProducts = useMemo(() => {
+    return products.filter(p => {
+      if (stockFilter === "low" && (p.stock || 0) > 3) return false;
+      if (productSearchQuery.trim()) {
+        const q = productSearchQuery.toLowerCase();
+        const matchTitle = p.title.toLowerCase().includes(q);
+        const matchCat = (p.category || "").toLowerCase().includes(q);
+        if (!matchTitle && !matchCat) return false;
+      }
+      return true;
+    });
+  }, [products, stockFilter, productSearchQuery]);
+
+  // Ajustador rápido de stock desde la lista
+  const handleAdjustStock = (productId, delta) => {
+    setProducts(prev => prev.map(p => {
+      if (p.id === productId) {
+        const newStock = Math.max(0, (p.stock || 0) + delta);
+        return { ...p, stock: newStock };
+      }
+      return p;
+    }));
+  };
+
+  // Compresión y carga directa de imágenes desde celular o PC
+  const handleImageFileChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      addToast({ title: "Formato no válido", description: "Seleccioná un archivo de imagen (JPG, PNG, WEBP).", type: "error" });
+      return;
+    }
+
+    setIsUploadingImage(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          const maxDim = 1200;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const compressed = canvas.toDataURL("image/jpeg", 0.85);
+          setProductForm(prev => ({ ...prev, image: compressed }));
+          addToast({
+            title: "¡Foto cargada y optimizada! 📸",
+            description: "Imagen comprimida y lista para mostrarse.",
+            type: "success"
+          });
+        } catch (err) {
+          setProductForm(prev => ({ ...prev, image: event.target.result }));
+        } finally {
+          setIsUploadingImage(false);
+        }
+      };
+      img.onerror = () => {
+        setIsUploadingImage(false);
+        addToast({ title: "Error al procesar imagen", description: "Intentá con otro archivo.", type: "error" });
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Formulario de edición / creación de prenda
   const [productForm, setProductForm] = useState({
@@ -4277,112 +4547,407 @@ function AdminModal() {
         {/* PESTAÑA: PRENDAS & CATÁLOGO */}
         {tab === "products" && (
           <div className="space-y-4">
-            {/* Barra de herramientas de productos */}
-            <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-pink-50/70 border border-pink-200/60 rounded-2xl">
-              <div>
-                <span className="text-xs font-bold text-pink-900 block">Total de Prendas Activas: {products.length}</span>
-                <span className="text-[11px] text-pink-700">Podés agregar nuevas prendas o editar precios en 1 clic.</span>
+            
+            {/* Dashboard de Métricas Rápidas */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="p-3 bg-[#FAF7F2] border border-[#E8E1D5] rounded-2xl">
+                <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Facturación</span>
+                <span className="text-base sm:text-lg font-black text-stone-900">{formatPrice(totalRevenue)}</span>
+              </div>
+              <div className="p-3 bg-[#FAF7F2] border border-[#E8E1D5] rounded-2xl">
+                <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Pedidos</span>
+                <span className="text-base sm:text-lg font-black text-pink-600">{orders.length} órdenes</span>
+              </div>
+              <div className="p-3 bg-[#FAF7F2] border border-[#E8E1D5] rounded-2xl">
+                <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Catálogo Activo</span>
+                <span className="text-base sm:text-lg font-black text-stone-900">{products.length} prendas</span>
+              </div>
+              <div
+                onClick={() => setStockFilter(stockFilter === "low" ? "all" : "low")}
+                className={`p-3 border rounded-2xl cursor-pointer transition-all ${
+                  lowStockCount > 0
+                    ? "bg-amber-50/80 border-amber-300 text-amber-950 hover:bg-amber-100/70"
+                    : "bg-[#FAF7F2] border-[#E8E1D5] text-stone-900"
+                }`}
+              >
+                <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Stock en Alerta</span>
+                <span className={`text-base sm:text-lg font-black flex items-center gap-1 ${lowStockCount > 0 ? "text-amber-700" : "text-emerald-700"}`}>
+                  {lowStockCount > 0 ? `⚠️ ${lowStockCount} prendas` : "✓ Óptimo"}
+                </span>
+              </div>
+            </div>
+
+            {/* Barra de herramientas y filtros */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-pink-50/70 border border-pink-200/60 rounded-2xl">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setStockFilter("all")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    stockFilter === "all" ? "bg-stone-900 text-white shadow-xs" : "bg-white text-stone-700 border border-stone-200 hover:bg-stone-100"
+                  }`}
+                >
+                  Todas ({products.length})
+                </button>
+                <button
+                  onClick={() => setStockFilter("low")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                    stockFilter === "low"
+                      ? "bg-amber-600 text-white shadow-xs"
+                      : lowStockCount > 0
+                      ? "bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200"
+                      : "bg-white text-stone-600 border border-stone-200 hover:bg-stone-100"
+                  }`}
+                >
+                  <span>⚠️ Stock Bajo ({lowStockCount})</span>
+                </button>
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Buscar prenda..."
+                  value={productSearchQuery}
+                  onChange={(e) => setProductSearchQuery(e.target.value)}
+                  className="bg-white border border-stone-300 rounded-xl px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-pink-500 w-36 sm:w-44"
+                />
+
                 <button
                   onClick={handleOpenNewProduct}
-                  className="salem-gradient-btn text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer"
+                  className="salem-gradient-btn text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer"
                 >
-                  <Icons.Plus className="w-4 h-4" />
-                  <span>➕ Agregar Nueva Prenda</span>
+                  <Icons.Plus className="w-3.5 h-3.5" />
+                  <span>➕ Nueva Prenda</span>
                 </button>
 
                 <button
                   onClick={handlePublishAll}
                   disabled={isSavingBackend}
-                  className="bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                   title="Publica todos los productos en el backend y Vercel"
                 >
-                  <span>🚀 Publicar Cambios</span>
+                  <span>🚀 Publicar</span>
                 </button>
               </div>
             </div>
 
             {/* Listado de prendas */}
             <div className="divide-y divide-stone-100 max-h-[50vh] overflow-y-auto pr-1">
-              {products.map((p) => (
-                <div key={p.id} className="py-3 flex items-center justify-between gap-3 text-xs hover:bg-stone-50/80 px-2 rounded-xl transition-colors">
-                  {/* Foto y Título */}
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <img
-                      src={p.images[0]}
-                      className="w-12 h-14 rounded-xl object-cover bg-stone-100 shrink-0 border border-stone-200"
-                      alt=""
-                    />
-                    <div className="min-w-0">
-                      <span className="font-bold text-stone-900 block truncate text-sm">{p.title}</span>
-                      <div className="flex items-center gap-2 text-stone-500 text-[11px] mt-0.5">
-                        <span className="uppercase text-pink-600 font-bold">{p.category}</span>
-                        <span>•</span>
-                        <span>Stock: <strong className="text-stone-800">{p.stock}</strong> un.</span>
-                        {p.isBestSeller && <span className="text-amber-600 font-bold">🔥 Top</span>}
-                        {p.isNew && <span className="text-pink-600 font-bold">✨ Nuevo</span>}
+              {adminFilteredProducts.length > 0 ? (
+                adminFilteredProducts.map((p) => {
+                  const isCriticalStock = (p.stock || 0) <= 3;
+                  const isZeroStock = (p.stock || 0) === 0;
+
+                  return (
+                    <div key={p.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs hover:bg-stone-50/80 px-2 rounded-xl transition-colors">
+                      {/* Foto y Título */}
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <img
+                          src={p.images[0]}
+                          className="w-12 h-14 rounded-xl object-cover bg-stone-100 shrink-0 border border-stone-200"
+                          alt=""
+                        />
+                        <div className="min-w-0">
+                          <span className="font-bold text-stone-900 block truncate text-sm">{p.title}</span>
+                          <div className="flex flex-wrap items-center gap-2 text-stone-500 text-[11px] mt-0.5">
+                            <span className="uppercase text-pink-600 font-bold">{p.category}</span>
+                            <span>•</span>
+                            
+                            {/* Alerta de Stock Visual */}
+                            {isZeroStock ? (
+                              <span className="text-[10px] font-black text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded">
+                                ⛔ AGOTADO
+                              </span>
+                            ) : isCriticalStock ? (
+                              <span className="text-[10px] font-black text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300 animate-pulse">
+                                ⚠️ Solo {p.stock} un.
+                              </span>
+                            ) : (
+                              <span>Stock: <strong className="text-stone-800">{p.stock}</strong> un.</span>
+                            )}
+
+                            {p.isBestSeller && <span className="text-amber-600 font-bold">🔥 Top</span>}
+                            {p.isNew && <span className="text-pink-600 font-bold">✨ Nuevo</span>}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Ajustador de Stock Rápido +/- y Precios */}
+                      <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                        {/* Stepper rápido de stock */}
+                        <div className="flex items-center gap-1 bg-stone-100 rounded-lg p-1 border border-stone-200">
+                          <button
+                            type="button"
+                            onClick={() => handleAdjustStock(p.id, -1)}
+                            className="w-5 h-5 rounded flex items-center justify-center text-stone-600 hover:bg-white hover:text-stone-900 font-bold text-xs cursor-pointer"
+                            title="Restar 1 unidad de stock"
+                          >
+                            -
+                          </button>
+                          <span className={`px-1.5 text-xs font-bold min-w-[20px] text-center ${isCriticalStock ? "text-rose-600 font-black" : "text-stone-800"}`}>
+                            {p.stock}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleAdjustStock(p.id, 1)}
+                            className="w-5 h-5 rounded flex items-center justify-center text-stone-600 hover:bg-white hover:text-stone-900 font-bold text-xs cursor-pointer"
+                            title="Sumar 1 unidad de stock"
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        {/* Precios */}
+                        <div className="text-right">
+                          <span className="font-black text-stone-900 text-sm block">
+                            {formatPrice(p.promoPrice || p.price)}
+                          </span>
+                          {p.promoPrice && (
+                            <span className="line-through text-stone-400 text-[10px]">
+                              {formatPrice(p.price)}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Acciones */}
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleOpenEditProduct(p)}
+                            className="bg-stone-100 hover:bg-pink-100 hover:text-pink-700 text-stone-700 px-3 py-1.5 rounded-lg font-bold text-xs transition-colors cursor-pointer"
+                          >
+                            ✏️ Editar
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProduct(p.id, p.title)}
+                            className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                            title="Eliminar prenda"
+                          >
+                            <Icons.Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Precios */}
-                  <div className="text-right shrink-0">
-                    <span className="font-black text-stone-900 text-sm block">
-                      {formatPrice(p.promoPrice || p.price)}
-                    </span>
-                    {p.promoPrice && (
-                      <span className="line-through text-stone-400 text-[10px]">
-                        {formatPrice(p.price)}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Acciones */}
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      onClick={() => handleOpenEditProduct(p)}
-                      className="bg-stone-100 hover:bg-pink-100 hover:text-pink-700 text-stone-700 px-3 py-1.5 rounded-lg font-bold text-xs transition-colors cursor-pointer"
-                    >
-                      ✏️ Editar
-                    </button>
-                    <button
-                      onClick={() => handleDeleteProduct(p.id, p.title)}
-                      className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                      title="Eliminar prenda"
-                    >
-                      <Icons.Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                  );
+                })
+              ) : (
+                <div className="py-12 text-center text-stone-400">
+                  <p className="font-bold text-stone-700">No se encontraron prendas con este filtro</p>
+                  <p className="text-xs text-stone-500 mt-1">Probá cambiando el término de búsqueda o seleccionando "Todas".</p>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}
 
-        {/* PESTAÑA: PEDIDOS */}
+        {/* PESTAÑA: PEDIDOS & DESPACHOS */}
         {tab === "orders" && (
-          <div className="space-y-3">
+          <div className="space-y-4">
+            
+            {/* Header de pedidos */}
+            <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-pink-50/70 border border-pink-200/60 rounded-2xl">
+              <div>
+                <span className="text-xs font-bold text-pink-900 block">
+                  Gestor de Pedidos & Despachos ({orders.length})
+                </span>
+                <span className="text-[11px] text-pink-700">
+                  Generá etiquetas de envío, notificá el seguimiento por WhatsApp y controlá estados.
+                </span>
+              </div>
+            </div>
+
             {orders.length > 0 ? (
-              <div className="space-y-2.5 max-h-[50vh] overflow-y-auto pr-1">
-                {orders.map((o) => (
-                  <div key={o.orderNumber} className="p-3.5 rounded-2xl bg-[#FAF7F2] border border-[#E8E1D5] text-xs">
-                    <div className="flex justify-between font-bold text-stone-900 mb-1">
-                      <span>Orden #{o.orderNumber}</span>
-                      <span className="text-pink-600 font-black text-sm">{formatPrice(o.total)}</span>
+              <div className="space-y-3 max-h-[55vh] overflow-y-auto pr-1">
+                {orders.map((o) => {
+                  const cleanPhone = (o.customer.phone || "").replace(/\D/g, "");
+                  const trackingCode = o.trackingNumber || "";
+
+                  const handleNotifyTracking = () => {
+                    const msg = encodeURIComponent(
+                      `¡Hola ${o.customer.fullName}! 🐈‍⬛ Te escribimos de Jeans SLM / Indumentaria Salem.\n\n` +
+                      `📦 Te avisamos que tu pedido #${o.orderNumber} ya fue despachado y está en camino.\n` +
+                      `🚚 Transporte / Correo: ${o.shipping?.name || "Correo Argentino"}\n` +
+                      `📍 Código de seguimiento: ${trackingCode || "En proceso de asignación"}\n\n` +
+                      `¡Muchas gracias por tu compra! Avisanos cuando lo recibas ✨`
+                    );
+                    window.open(`https://wa.me/${cleanPhone}?text=${msg}`, "_blank");
+                  };
+
+                  const handleCopyAddress = () => {
+                    const text = 
+                      `Destinatario: ${o.customer.fullName}\n` +
+                      `DNI: ${o.customer.dni || "-"}\n` +
+                      `Dirección: ${o.customer.address} ${o.customer.apartment ? "(Dpto " + o.customer.apartment + ")" : ""}\n` +
+                      `Localidad: ${o.customer.city}\n` +
+                      `CP: ${o.customer.postalCode || "-"}\n` +
+                      `Tel: ${o.customer.phone}\n` +
+                      `Transporte: ${o.shipping?.name || "Correo Argentino"}`;
+                    navigator.clipboard.writeText(text);
+                    addToast({
+                      title: "¡Datos copiados! 📋",
+                      description: "Listos para pegar en la web del correo.",
+                      type: "success"
+                    });
+                  };
+
+                  return (
+                    <div key={o.orderNumber} className="p-4 rounded-2xl bg-[#FAF7F2] border border-[#E8E1D5] text-xs space-y-3 shadow-2xs">
+                      {/* Cabecera de la orden */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-stone-200">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-black text-sm text-stone-900">
+                            #{o.orderNumber}
+                          </span>
+                          <span className="text-[10px] text-stone-400 font-semibold">
+                            {o.date}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {/* Selector de Estado */}
+                          <select
+                            value={o.status || "Pendiente de WhatsApp"}
+                            onChange={(e) => updateOrder(o.orderNumber, { status: e.target.value })}
+                            className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border cursor-pointer ${
+                              o.status === "Despachado 🚚"
+                                ? "bg-purple-100 text-purple-900 border-purple-300"
+                                : o.status === "Entregado ✅"
+                                ? "bg-emerald-100 text-emerald-900 border-emerald-300"
+                                : o.status === "Pago Confirmado 💳"
+                                ? "bg-blue-100 text-blue-900 border-blue-300"
+                                : "bg-amber-100 text-amber-900 border-amber-300"
+                            }`}
+                          >
+                            <option value="Pendiente de WhatsApp">⏳ Pendiente de WhatsApp</option>
+                            <option value="Pago Confirmado 💳">💳 Pago Confirmado</option>
+                            <option value="En Preparación 📦">📦 En Preparación</option>
+                            <option value="Despachado 🚚">🚚 Despachado</option>
+                            <option value="Entregado ✅">✅ Entregado</option>
+                            <option value="Cancelado ❌">❌ Cancelado</option>
+                          </select>
+
+                          <span className="text-pink-600 font-black text-sm">
+                            {formatPrice(o.total)}
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm(`¿Eliminar orden #${o.orderNumber}?`)) {
+                                deleteOrder(o.orderNumber);
+                              }
+                            }}
+                            className="p-1 text-stone-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 cursor-pointer"
+                            title="Eliminar orden"
+                          >
+                            <Icons.Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Datos del Cliente & Envío */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-stone-700">
+                        <div>
+                          <p className="font-bold text-stone-900">
+                            👤 {o.customer.fullName}
+                          </p>
+                          <p className="text-[11px] text-stone-500 mt-0.5">
+                            DNI: {o.customer.dni || "No especificado"} • Email: {o.customer.email || "-"}
+                          </p>
+                          <a
+                            href={`https://wa.me/${cleanPhone}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 hover:text-emerald-900 mt-1"
+                          >
+                            <Icons.MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>WhatsApp: {o.customer.phone}</span>
+                          </a>
+                        </div>
+
+                        <div>
+                          <p className="text-stone-700">
+                            <strong>📍 Destino:</strong> {o.customer.address} {o.customer.apartment ? `(Dpto ${o.customer.apartment})` : ""}
+                          </p>
+                          <p className="text-[11px] text-stone-500 mt-0.5">
+                            {o.customer.city} • CP {o.customer.postalCode || "-"}
+                          </p>
+                          <p className="text-[11px] font-semibold text-stone-600 mt-1">
+                            🚚 Transporte: <strong className="text-stone-900">{o.shipping?.name || "Correo Argentino"}</strong>
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Prendas compradas */}
+                      {o.items && o.items.length > 0 && (
+                        <div className="pt-2 border-t border-stone-200/70 flex flex-wrap gap-1.5 items-center">
+                          <span className="text-[10px] font-bold text-stone-500 mr-1">Prendas:</span>
+                          {o.items.map((it, idx) => (
+                            <span
+                              key={idx}
+                              className="text-[11px] bg-white border border-stone-200 px-2 py-0.5 rounded-lg text-stone-800 font-medium"
+                            >
+                              {it.title} ({it.size}) x{it.quantity}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Barra de Herramientas de Despacho */}
+                      <div className="pt-2.5 border-t border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                        {/* Input de Seguimiento */}
+                        <div className="flex items-center gap-1.5 flex-1 max-w-sm">
+                          <input
+                            type="text"
+                            placeholder="Código seguimiento (ej: AR123456)"
+                            value={o.trackingNumber || ""}
+                            onChange={(e) => updateOrder(o.orderNumber, { trackingNumber: e.target.value })}
+                            className="flex-1 bg-white border border-stone-300 rounded-xl px-2.5 py-1.5 text-[11px] font-mono text-stone-900 focus:outline-none focus:border-pink-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleNotifyTracking}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl text-[11px] flex items-center gap-1 shrink-0 cursor-pointer transition-colors shadow-2xs"
+                            title="Avisar a la clienta por WhatsApp con el número de seguimiento"
+                          >
+                            <Icons.MessageCircle className="w-3.5 h-3.5" />
+                            <span>Notificar</span>
+                          </button>
+                        </div>
+
+                        {/* Botones de Etiqueta y Copia */}
+                        <div className="flex items-center gap-2 self-end sm:self-auto">
+                          <button
+                            type="button"
+                            onClick={handleCopyAddress}
+                            className="bg-white hover:bg-stone-100 border border-stone-300 text-stone-700 font-bold px-2.5 py-1.5 rounded-xl text-[11px] flex items-center gap-1 cursor-pointer transition-colors"
+                            title="Copiar datos para la web del correo"
+                          >
+                            <Icons.Copy className="w-3.5 h-3.5" />
+                            <span>Copiar Datos</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setShippingLabelOrder(o)}
+                            className="salem-gradient-btn text-white font-bold px-3 py-1.5 rounded-xl text-[11px] flex items-center gap-1 shadow-xs cursor-pointer"
+                            title="Generar e imprimir etiqueta para la caja o bolsa"
+                          >
+                            <span>🏷️ Generar Etiqueta</span>
+                          </button>
+                        </div>
+                      </div>
+
                     </div>
-                    <p className="text-stone-700"><strong>Cliente:</strong> {o.customer.fullName} • WhatsApp: {o.customer.phone}</p>
-                    <p className="text-stone-500"><strong>Entrega:</strong> {o.customer.address}, {o.customer.city}</p>
-                    <div className="mt-2 pt-2 border-t border-stone-200/80 text-[11px] text-stone-600 flex justify-between">
-                      <span>{o.date}</span>
-                      <span className="text-emerald-700 font-bold">{o.status}</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
-              <p className="text-xs text-stone-500 text-center py-12">No hay pedidos registrados todavía.</p>
+              <div className="py-14 text-center text-stone-400 bg-stone-50 rounded-2xl border border-dashed border-stone-200">
+                <Icons.ShoppingBag className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                <p className="font-bold text-stone-700">No hay pedidos registrados todavía</p>
+                <p className="text-xs text-stone-500 mt-0.5">
+                  Cuando tus clientas completen el checkout, aparecerán acá listos para despachar.
+                </p>
+              </div>
             )}
           </div>
         )}
@@ -4900,15 +5465,71 @@ function AdminModal() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="font-bold text-stone-700 block mb-1">Foto (ruta local o link de internet)</label>
-                  <input
-                    type="text"
-                    placeholder="Ej: products/mi-foto.jpg o https://..."
-                    value={productForm.image}
-                    onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
-                    className="w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs"
-                  />
+                {/* Selector de Foto: Subida Directa desde Celular / PC o Link */}
+                <div className="p-3.5 bg-[#FAF7F2] border border-stone-300 rounded-2xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="font-bold text-stone-800 block text-xs">
+                      Foto de la Prenda (Galería o Archivo)
+                    </label>
+                    {productForm.image && (
+                      <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                        ✓ Foto Cargada
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-center gap-3.5">
+                    {productForm.image ? (
+                      <div className="relative w-24 h-32 rounded-xl overflow-hidden border-2 border-pink-400 bg-white shrink-0 shadow-xs group">
+                        <img src={productForm.image} alt="Prenda" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setProductForm(prev => ({ ...prev, image: "" }))}
+                          className="absolute top-1 right-1 bg-rose-600 hover:bg-rose-700 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-md cursor-pointer transition-transform hover:scale-110"
+                          title="Quitar foto"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="w-24 h-32 rounded-xl border-2 border-dashed border-stone-300 flex flex-col items-center justify-center text-stone-400 bg-white shrink-0">
+                        <span className="text-2xl mb-1">📸</span>
+                        <span className="text-[10px] text-center font-bold px-1">Sin foto</span>
+                      </div>
+                    )}
+
+                    <div className="flex-1 space-y-2 w-full">
+                      {/* Botón nativo oculto */}
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleImageFileChange}
+                        accept="image/*"
+                        className="hidden"
+                      />
+
+                      <button
+                        type="button"
+                        disabled={isUploadingImage}
+                        onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                        className="w-full py-2.5 px-3 bg-white hover:bg-pink-50 border border-pink-300 text-pink-700 font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                      >
+                        <Icons.Sparkles className="w-3.5 h-3.5 text-pink-500" />
+                        <span>{isUploadingImage ? "Optimizando foto..." : "Subir foto desde mi Celular o PC"}</span>
+                      </button>
+
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-stone-500 block font-medium">O pegar link de internet / archivo:</span>
+                        <input
+                          type="text"
+                          placeholder="https://... o products/foto.jpg"
+                          value={productForm.image}
+                          onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
+                          className="w-full bg-white border border-stone-300 rounded-xl px-2.5 py-1.5 text-xs text-stone-800"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Badges / Destacados */}
@@ -4962,6 +5583,14 @@ function AdminModal() {
               </form>
             </div>
           </div>
+        )}
+
+        {/* MODAL INTERNO: ETIQUETA DE DESPACHO PARA PAQUETERÍA */}
+        {shippingLabelOrder && (
+          <ShippingLabelModal
+            order={shippingLabelOrder}
+            onClose={() => setShippingLabelOrder(null)}
+          />
         )}
 
       </div>

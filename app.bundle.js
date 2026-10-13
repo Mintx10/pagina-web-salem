@@ -936,6 +936,15 @@ function StoreProvider({
     setOrders(prev => [newOrder, ...prev]);
     return newOrder;
   };
+  const updateOrder = (orderNumber, updates) => {
+    setOrders(prev => prev.map(o => o.orderNumber === orderNumber ? {
+      ...o,
+      ...updates
+    } : o));
+  };
+  const deleteOrder = orderNumber => {
+    setOrders(prev => prev.filter(o => o.orderNumber !== orderNumber));
+  };
   const value = {
     settings,
     setSettings,
@@ -1009,7 +1018,10 @@ function StoreProvider({
     activePaymentProduct,
     setActivePaymentProduct,
     orders,
+    setOrders,
     createOrder,
+    updateOrder,
+    deleteOrder,
     toasts,
     addToast,
     removeToast
@@ -3439,6 +3451,117 @@ function LegalModal() {
   }, "Confirmar Revocaci\xF3n de Compra")))));
 }
 
+// --- MODAL DE ETIQUETA DE DESPACHO PARA PAQUETERÍA ---
+function ShippingLabelModal({
+  order,
+  onClose
+}) {
+  const {
+    settings,
+    formatPrice,
+    addToast
+  } = useStore();
+  if (!order) return null;
+  const handlePrint = () => {
+    window.print();
+  };
+  const handleCopyRawData = () => {
+    const rawText = `DATOS DE ENVÍO - PEDIDO #${order.orderNumber}\n` + `Destinatario: ${order.customer.fullName}\n` + `DNI: ${order.customer.dni || "Consignado"}\n` + `Teléfono: ${order.customer.phone}\n` + `Dirección: ${order.customer.address} ${order.customer.apartment ? "(Dpto: " + order.customer.apartment + ")" : ""}\n` + `Localidad: ${order.customer.city}\n` + `Código Postal: ${order.customer.postalCode || "-"}\n` + `Transporte: ${order.shipping?.name || "Correo Argentino"}\n` + `Notas: ${order.customer.notes || "Entregar en mano"}`;
+    navigator.clipboard.writeText(rawText);
+    addToast({
+      title: "¡Datos de envío copiados! 📋",
+      description: "Listos para pegar en la web de Correo Argentino o Andreani.",
+      type: "success"
+    });
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-fade-in bg-stone-900/60 backdrop-blur-sm"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "relative z-10 w-full max-w-xl bg-white rounded-3xl border border-stone-300 shadow-2xl p-5 sm:p-7 text-stone-900 animate-slide-up max-h-[90vh] overflow-y-auto"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between pb-3 border-b border-stone-200 mb-4 print:hidden"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-xl"
+  }, "\uD83C\uDFF7\uFE0F"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h4", {
+    className: "font-display font-black text-lg text-stone-900"
+  }, "Etiqueta Oficial de Despacho"), /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px] text-stone-500"
+  }, "Formato est\xE1ndar para pegar en el paquete de Correo Argentino / Andreani"))), /*#__PURE__*/React.createElement("button", {
+    onClick: onClose,
+    className: "p-1.5 text-stone-400 hover:text-stone-900 cursor-pointer"
+  }, /*#__PURE__*/React.createElement(Icons.X, {
+    className: "w-5 h-5"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "border-2 border-stone-900 rounded-2xl p-4 sm:p-5 bg-white text-stone-900 font-sans space-y-3.5 shadow-sm"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between border-b-2 border-stone-900 pb-3"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+    className: "font-black text-base tracking-wider block"
+  }, "JEANS SLM \u2728"), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-stone-600 uppercase font-bold tracking-widest"
+  }, settings.brandSubtitle || "Indumentaria Salem")), /*#__PURE__*/React.createElement("div", {
+    className: "text-right"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] uppercase font-bold tracking-wider bg-stone-900 text-white px-2 py-0.5 rounded"
+  }, "E-COMMERCE PACK"), /*#__PURE__*/React.createElement("span", {
+    className: "font-mono text-xs font-black block mt-0.5"
+  }, "#", order.orderNumber))), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "p-2.5 rounded-xl bg-stone-50 border border-stone-200 space-y-0.5"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] font-black text-stone-500 uppercase tracking-wider block mb-1"
+  }, "REMITENTE:"), /*#__PURE__*/React.createElement("strong", {
+    className: "block text-stone-900 font-bold"
+  }, "Indumentaria Salem / Jeans SLM"), /*#__PURE__*/React.createElement("p", {
+    className: "text-stone-600 text-[11px] leading-tight"
+  }, "Showroom Palermo Soho, Gurruchaga 1750", /*#__PURE__*/React.createElement("br", null), "CABA (CP 1414) \u2022 Tel: ", settings.whatsappPhone)), /*#__PURE__*/React.createElement("div", {
+    className: "p-2.5 rounded-xl bg-pink-50/50 border border-pink-200 space-y-0.5"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] font-black text-pink-700 uppercase tracking-wider block mb-1"
+  }, "DESTINATARIO:"), /*#__PURE__*/React.createElement("strong", {
+    className: "block text-stone-900 text-sm font-extrabold"
+  }, order.customer.fullName), /*#__PURE__*/React.createElement("p", {
+    className: "text-stone-700 text-[11px] font-semibold"
+  }, "DNI / CUIT: ", order.customer.dni || "Consignado"), /*#__PURE__*/React.createElement("p", {
+    className: "text-stone-600 text-[11px] leading-tight"
+  }, order.customer.address, " ", order.customer.apartment ? `(Piso/Dpto: ${order.customer.apartment})` : "", /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("strong", null, order.customer.city), " \u2022 CP: ", /*#__PURE__*/React.createElement("strong", null, order.customer.postalCode || "-"), /*#__PURE__*/React.createElement("br", null), "Tel\xE9fono: ", /*#__PURE__*/React.createElement("strong", null, order.customer.phone)))), /*#__PURE__*/React.createElement("div", {
+    className: "border border-stone-200 rounded-xl p-2.5 bg-stone-50 text-[11px] space-y-1"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex justify-between font-bold"
+  }, /*#__PURE__*/React.createElement("span", null, "Transporte: ", /*#__PURE__*/React.createElement("span", {
+    className: "text-pink-700"
+  }, order.shipping?.name || "Correo Argentino")), /*#__PURE__*/React.createElement("span", null, "Seguimiento: ", /*#__PURE__*/React.createElement("span", {
+    className: "font-mono text-stone-900"
+  }, order.trackingNumber || "S/N"))), order.customer.notes && /*#__PURE__*/React.createElement("p", {
+    className: "text-stone-600 italic"
+  }, "Nota de entrega: \"", order.customer.notes, "\""), /*#__PURE__*/React.createElement("div", {
+    className: "pt-1 border-t border-stone-200 text-stone-500 truncate"
+  }, "Prendas: ", order.items?.map(it => `${it.title} (${it.size}) x${it.quantity}`).join(" • "))), /*#__PURE__*/React.createElement("div", {
+    className: "pt-2 text-center"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "inline-block font-mono text-xs tracking-[6px] font-bold py-1 px-4 bg-stone-100 border border-stone-300 rounded"
+  }, "||| | |||| | ||| || ||| | |||"), /*#__PURE__*/React.createElement("span", {
+    className: "text-[9px] text-stone-400 font-mono block mt-0.5"
+  }, "COD-", order.orderNumber, "-", order.customer.postalCode || "0000"))), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-wrap gap-2.5 pt-4 print:hidden"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: handlePrint,
+    className: "flex-1 salem-gradient-btn text-white font-bold py-2.5 px-4 rounded-xl shadow-md text-xs flex items-center justify-center gap-2 cursor-pointer"
+  }, /*#__PURE__*/React.createElement("span", null, "\uD83D\uDDA8\uFE0F Imprimir Etiqueta")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: handleCopyRawData,
+    className: "bg-white hover:bg-stone-50 border border-stone-300 text-stone-700 font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+  }, /*#__PURE__*/React.createElement("span", null, "\uD83D\uDCCB Copiar Datos de Env\xEDo")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onClose,
+    className: "bg-stone-100 hover:bg-stone-200 text-stone-600 font-bold py-2.5 px-4 rounded-xl text-xs cursor-pointer"
+  }, "Cerrar"))));
+}
+
 // --- PANEL DE ADMINISTRACIÓN SALEM ---
 function AdminModal() {
   const {
@@ -3449,6 +3572,9 @@ function AdminModal() {
     products,
     setProducts,
     orders,
+    setOrders,
+    updateOrder,
+    deleteOrder,
     formatPrice,
     addToast,
     adminAuth,
@@ -3471,6 +3597,114 @@ function AdminModal() {
   const [githubTokenInput, setGithubTokenInput] = useState(adminAuth?.githubToken || "");
   const [isSavingBackend, setIsSavingBackend] = useState(false);
   const [backendSyncMsg, setBackendSyncMsg] = useState("");
+
+  // Estados Fase 2: Alertas de Stock, Buscador Admin, Etiquetas y Fotos
+  const [stockFilter, setStockFilter] = useState("all"); // 'all' | 'low'
+  const [productSearchQuery, setProductSearchQuery] = useState("");
+  const [shippingLabelOrder, setShippingLabelOrder] = useState(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const fileInputRef = useRef(null);
+
+  // Métricas rápidas calculadas
+  const totalRevenue = useMemo(() => orders.reduce((sum, o) => sum + (o.total || 0), 0), [orders]);
+  const lowStockCount = useMemo(() => products.filter(p => (p.stock || 0) <= 3).length, [products]);
+
+  // Lista filtrada de prendas para el panel
+  const adminFilteredProducts = useMemo(() => {
+    return products.filter(p => {
+      if (stockFilter === "low" && (p.stock || 0) > 3) return false;
+      if (productSearchQuery.trim()) {
+        const q = productSearchQuery.toLowerCase();
+        const matchTitle = p.title.toLowerCase().includes(q);
+        const matchCat = (p.category || "").toLowerCase().includes(q);
+        if (!matchTitle && !matchCat) return false;
+      }
+      return true;
+    });
+  }, [products, stockFilter, productSearchQuery]);
+
+  // Ajustador rápido de stock desde la lista
+  const handleAdjustStock = (productId, delta) => {
+    setProducts(prev => prev.map(p => {
+      if (p.id === productId) {
+        const newStock = Math.max(0, (p.stock || 0) + delta);
+        return {
+          ...p,
+          stock: newStock
+        };
+      }
+      return p;
+    }));
+  };
+
+  // Compresión y carga directa de imágenes desde celular o PC
+  const handleImageFileChange = e => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      addToast({
+        title: "Formato no válido",
+        description: "Seleccioná un archivo de imagen (JPG, PNG, WEBP).",
+        type: "error"
+      });
+      return;
+    }
+    setIsUploadingImage(true);
+    const reader = new FileReader();
+    reader.onload = event => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          const maxDim = 1200;
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round(height * maxDim / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round(width * maxDim / height);
+              height = maxDim;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL("image/jpeg", 0.85);
+          setProductForm(prev => ({
+            ...prev,
+            image: compressed
+          }));
+          addToast({
+            title: "¡Foto cargada y optimizada! 📸",
+            description: "Imagen comprimida y lista para mostrarse.",
+            type: "success"
+          });
+        } catch (err) {
+          setProductForm(prev => ({
+            ...prev,
+            image: event.target.result
+          }));
+        } finally {
+          setIsUploadingImage(false);
+        }
+      };
+      img.onerror = () => {
+        setIsUploadingImage(false);
+        addToast({
+          title: "Error al procesar imagen",
+          description: "Intentá con otro archivo.",
+          type: "error"
+        });
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Formulario de edición / creación de prenda
   const [productForm, setProductForm] = useState({
@@ -4006,87 +4240,273 @@ function AdminModal() {
   }, "\uD83D\uDCE6 Pedidos (", orders.length, ")")), tab === "products" && /*#__PURE__*/React.createElement("div", {
     className: "space-y-4"
   }, /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 sm:grid-cols-4 gap-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "p-3 bg-[#FAF7F2] border border-[#E8E1D5] rounded-2xl"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] font-bold text-stone-500 uppercase tracking-wider block"
+  }, "Facturaci\xF3n"), /*#__PURE__*/React.createElement("span", {
+    className: "text-base sm:text-lg font-black text-stone-900"
+  }, formatPrice(totalRevenue))), /*#__PURE__*/React.createElement("div", {
+    className: "p-3 bg-[#FAF7F2] border border-[#E8E1D5] rounded-2xl"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] font-bold text-stone-500 uppercase tracking-wider block"
+  }, "Pedidos"), /*#__PURE__*/React.createElement("span", {
+    className: "text-base sm:text-lg font-black text-pink-600"
+  }, orders.length, " \xF3rdenes")), /*#__PURE__*/React.createElement("div", {
+    className: "p-3 bg-[#FAF7F2] border border-[#E8E1D5] rounded-2xl"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] font-bold text-stone-500 uppercase tracking-wider block"
+  }, "Cat\xE1logo Activo"), /*#__PURE__*/React.createElement("span", {
+    className: "text-base sm:text-lg font-black text-stone-900"
+  }, products.length, " prendas")), /*#__PURE__*/React.createElement("div", {
+    onClick: () => setStockFilter(stockFilter === "low" ? "all" : "low"),
+    className: `p-3 border rounded-2xl cursor-pointer transition-all ${lowStockCount > 0 ? "bg-amber-50/80 border-amber-300 text-amber-950 hover:bg-amber-100/70" : "bg-[#FAF7F2] border-[#E8E1D5] text-stone-900"}`
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] font-bold text-stone-500 uppercase tracking-wider block"
+  }, "Stock en Alerta"), /*#__PURE__*/React.createElement("span", {
+    className: `text-base sm:text-lg font-black flex items-center gap-1 ${lowStockCount > 0 ? "text-amber-700" : "text-emerald-700"}`
+  }, lowStockCount > 0 ? `⚠️ ${lowStockCount} prendas` : "✓ Óptimo"))), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-pink-50/70 border border-pink-200/60 rounded-2xl"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-wrap items-center gap-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setStockFilter("all"),
+    className: `px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${stockFilter === "all" ? "bg-stone-900 text-white shadow-xs" : "bg-white text-stone-700 border border-stone-200 hover:bg-stone-100"}`
+  }, "Todas (", products.length, ")"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setStockFilter("low"),
+    className: `px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${stockFilter === "low" ? "bg-amber-600 text-white shadow-xs" : lowStockCount > 0 ? "bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200" : "bg-white text-stone-600 border border-stone-200 hover:bg-stone-100"}`
+  }, /*#__PURE__*/React.createElement("span", null, "\u26A0\uFE0F Stock Bajo (", lowStockCount, ")"))), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-wrap items-center gap-2"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    placeholder: "Buscar prenda...",
+    value: productSearchQuery,
+    onChange: e => setProductSearchQuery(e.target.value),
+    className: "bg-white border border-stone-300 rounded-xl px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-pink-500 w-36 sm:w-44"
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: handleOpenNewProduct,
+    className: "salem-gradient-btn text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer"
+  }, /*#__PURE__*/React.createElement(Icons.Plus, {
+    className: "w-3.5 h-3.5"
+  }), /*#__PURE__*/React.createElement("span", null, "\u2795 Nueva Prenda")), /*#__PURE__*/React.createElement("button", {
+    onClick: handlePublishAll,
+    disabled: isSavingBackend,
+    className: "bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer disabled:opacity-50",
+    title: "Publica todos los productos en el backend y Vercel"
+  }, /*#__PURE__*/React.createElement("span", null, "\uD83D\uDE80 Publicar")))), /*#__PURE__*/React.createElement("div", {
+    className: "divide-y divide-stone-100 max-h-[50vh] overflow-y-auto pr-1"
+  }, adminFilteredProducts.length > 0 ? adminFilteredProducts.map(p => {
+    const isCriticalStock = (p.stock || 0) <= 3;
+    const isZeroStock = (p.stock || 0) === 0;
+    return /*#__PURE__*/React.createElement("div", {
+      key: p.id,
+      className: "py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs hover:bg-stone-50/80 px-2 rounded-xl transition-colors"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center gap-3 min-w-0 flex-1"
+    }, /*#__PURE__*/React.createElement("img", {
+      src: p.images[0],
+      className: "w-12 h-14 rounded-xl object-cover bg-stone-100 shrink-0 border border-stone-200",
+      alt: ""
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "min-w-0"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "font-bold text-stone-900 block truncate text-sm"
+    }, p.title), /*#__PURE__*/React.createElement("div", {
+      className: "flex flex-wrap items-center gap-2 text-stone-500 text-[11px] mt-0.5"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "uppercase text-pink-600 font-bold"
+    }, p.category), /*#__PURE__*/React.createElement("span", null, "\u2022"), isZeroStock ? /*#__PURE__*/React.createElement("span", {
+      className: "text-[10px] font-black text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded"
+    }, "\u26D4 AGOTADO") : isCriticalStock ? /*#__PURE__*/React.createElement("span", {
+      className: "text-[10px] font-black text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300 animate-pulse"
+    }, "\u26A0\uFE0F Solo ", p.stock, " un.") : /*#__PURE__*/React.createElement("span", null, "Stock: ", /*#__PURE__*/React.createElement("strong", {
+      className: "text-stone-800"
+    }, p.stock), " un."), p.isBestSeller && /*#__PURE__*/React.createElement("span", {
+      className: "text-amber-600 font-bold"
+    }, "\uD83D\uDD25 Top"), p.isNew && /*#__PURE__*/React.createElement("span", {
+      className: "text-pink-600 font-bold"
+    }, "\u2728 Nuevo")))), /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center justify-between sm:justify-end gap-3 shrink-0"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center gap-1 bg-stone-100 rounded-lg p-1 border border-stone-200"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => handleAdjustStock(p.id, -1),
+      className: "w-5 h-5 rounded flex items-center justify-center text-stone-600 hover:bg-white hover:text-stone-900 font-bold text-xs cursor-pointer",
+      title: "Restar 1 unidad de stock"
+    }, "-"), /*#__PURE__*/React.createElement("span", {
+      className: `px-1.5 text-xs font-bold min-w-[20px] text-center ${isCriticalStock ? "text-rose-600 font-black" : "text-stone-800"}`
+    }, p.stock), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => handleAdjustStock(p.id, 1),
+      className: "w-5 h-5 rounded flex items-center justify-center text-stone-600 hover:bg-white hover:text-stone-900 font-bold text-xs cursor-pointer",
+      title: "Sumar 1 unidad de stock"
+    }, "+")), /*#__PURE__*/React.createElement("div", {
+      className: "text-right"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "font-black text-stone-900 text-sm block"
+    }, formatPrice(p.promoPrice || p.price)), p.promoPrice && /*#__PURE__*/React.createElement("span", {
+      className: "line-through text-stone-400 text-[10px]"
+    }, formatPrice(p.price))), /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center gap-1.5"
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: () => handleOpenEditProduct(p),
+      className: "bg-stone-100 hover:bg-pink-100 hover:text-pink-700 text-stone-700 px-3 py-1.5 rounded-lg font-bold text-xs transition-colors cursor-pointer"
+    }, "\u270F\uFE0F Editar"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => handleDeleteProduct(p.id, p.title),
+      className: "p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer",
+      title: "Eliminar prenda"
+    }, /*#__PURE__*/React.createElement(Icons.Trash2, {
+      className: "w-4 h-4"
+    })))));
+  }) : /*#__PURE__*/React.createElement("div", {
+    className: "py-12 text-center text-stone-400"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "font-bold text-stone-700"
+  }, "No se encontraron prendas con este filtro"), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs text-stone-500 mt-1"
+  }, "Prob\xE1 cambiando el t\xE9rmino de b\xFAsqueda o seleccionando \"Todas\".")))), tab === "orders" && /*#__PURE__*/React.createElement("div", {
+    className: "space-y-4"
+  }, /*#__PURE__*/React.createElement("div", {
     className: "flex flex-wrap items-center justify-between gap-3 p-3 bg-pink-50/70 border border-pink-200/60 rounded-2xl"
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
     className: "text-xs font-bold text-pink-900 block"
-  }, "Total de Prendas Activas: ", products.length), /*#__PURE__*/React.createElement("span", {
+  }, "Gestor de Pedidos & Despachos (", orders.length, ")"), /*#__PURE__*/React.createElement("span", {
     className: "text-[11px] text-pink-700"
-  }, "Pod\xE9s agregar nuevas prendas o editar precios en 1 clic.")), /*#__PURE__*/React.createElement("div", {
-    className: "flex flex-wrap items-center gap-2"
-  }, /*#__PURE__*/React.createElement("button", {
-    onClick: handleOpenNewProduct,
-    className: "salem-gradient-btn text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer"
-  }, /*#__PURE__*/React.createElement(Icons.Plus, {
-    className: "w-4 h-4"
-  }), /*#__PURE__*/React.createElement("span", null, "\u2795 Agregar Nueva Prenda")), /*#__PURE__*/React.createElement("button", {
-    onClick: handlePublishAll,
-    disabled: isSavingBackend,
-    className: "bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 cursor-pointer disabled:opacity-50",
-    title: "Publica todos los productos en el backend y Vercel"
-  }, /*#__PURE__*/React.createElement("span", null, "\uD83D\uDE80 Publicar Cambios")))), /*#__PURE__*/React.createElement("div", {
-    className: "divide-y divide-stone-100 max-h-[50vh] overflow-y-auto pr-1"
-  }, products.map(p => /*#__PURE__*/React.createElement("div", {
-    key: p.id,
-    className: "py-3 flex items-center justify-between gap-3 text-xs hover:bg-stone-50/80 px-2 rounded-xl transition-colors"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center gap-3 min-w-0 flex-1"
-  }, /*#__PURE__*/React.createElement("img", {
-    src: p.images[0],
-    className: "w-12 h-14 rounded-xl object-cover bg-stone-100 shrink-0 border border-stone-200",
-    alt: ""
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "min-w-0"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "font-bold text-stone-900 block truncate text-sm"
-  }, p.title), /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center gap-2 text-stone-500 text-[11px] mt-0.5"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "uppercase text-pink-600 font-bold"
-  }, p.category), /*#__PURE__*/React.createElement("span", null, "\u2022"), /*#__PURE__*/React.createElement("span", null, "Stock: ", /*#__PURE__*/React.createElement("strong", {
-    className: "text-stone-800"
-  }, p.stock), " un."), p.isBestSeller && /*#__PURE__*/React.createElement("span", {
-    className: "text-amber-600 font-bold"
-  }, "\uD83D\uDD25 Top"), p.isNew && /*#__PURE__*/React.createElement("span", {
-    className: "text-pink-600 font-bold"
-  }, "\u2728 Nuevo")))), /*#__PURE__*/React.createElement("div", {
-    className: "text-right shrink-0"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "font-black text-stone-900 text-sm block"
-  }, formatPrice(p.promoPrice || p.price)), p.promoPrice && /*#__PURE__*/React.createElement("span", {
-    className: "line-through text-stone-400 text-[10px]"
-  }, formatPrice(p.price))), /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center gap-1.5 shrink-0"
-  }, /*#__PURE__*/React.createElement("button", {
-    onClick: () => handleOpenEditProduct(p),
-    className: "bg-stone-100 hover:bg-pink-100 hover:text-pink-700 text-stone-700 px-3 py-1.5 rounded-lg font-bold text-xs transition-colors cursor-pointer"
-  }, "\u270F\uFE0F Editar"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => handleDeleteProduct(p.id, p.title),
-    className: "p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer",
-    title: "Eliminar prenda"
-  }, /*#__PURE__*/React.createElement(Icons.Trash2, {
-    className: "w-4 h-4"
-  }))))))), tab === "orders" && /*#__PURE__*/React.createElement("div", {
-    className: "space-y-3"
-  }, orders.length > 0 ? /*#__PURE__*/React.createElement("div", {
-    className: "space-y-2.5 max-h-[50vh] overflow-y-auto pr-1"
-  }, orders.map(o => /*#__PURE__*/React.createElement("div", {
-    key: o.orderNumber,
-    className: "p-3.5 rounded-2xl bg-[#FAF7F2] border border-[#E8E1D5] text-xs"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "flex justify-between font-bold text-stone-900 mb-1"
-  }, /*#__PURE__*/React.createElement("span", null, "Orden #", o.orderNumber), /*#__PURE__*/React.createElement("span", {
-    className: "text-pink-600 font-black text-sm"
-  }, formatPrice(o.total))), /*#__PURE__*/React.createElement("p", {
-    className: "text-stone-700"
-  }, /*#__PURE__*/React.createElement("strong", null, "Cliente:"), " ", o.customer.fullName, " \u2022 WhatsApp: ", o.customer.phone), /*#__PURE__*/React.createElement("p", {
-    className: "text-stone-500"
-  }, /*#__PURE__*/React.createElement("strong", null, "Entrega:"), " ", o.customer.address, ", ", o.customer.city), /*#__PURE__*/React.createElement("div", {
-    className: "mt-2 pt-2 border-t border-stone-200/80 text-[11px] text-stone-600 flex justify-between"
-  }, /*#__PURE__*/React.createElement("span", null, o.date), /*#__PURE__*/React.createElement("span", {
-    className: "text-emerald-700 font-bold"
-  }, o.status))))) : /*#__PURE__*/React.createElement("p", {
-    className: "text-xs text-stone-500 text-center py-12"
-  }, "No hay pedidos registrados todav\xEDa.")), tab === "categories" && /*#__PURE__*/React.createElement("div", {
+  }, "Gener\xE1 etiquetas de env\xEDo, notific\xE1 el seguimiento por WhatsApp y control\xE1 estados."))), orders.length > 0 ? /*#__PURE__*/React.createElement("div", {
+    className: "space-y-3 max-h-[55vh] overflow-y-auto pr-1"
+  }, orders.map(o => {
+    const cleanPhone = (o.customer.phone || "").replace(/\D/g, "");
+    const trackingCode = o.trackingNumber || "";
+    const handleNotifyTracking = () => {
+      const msg = encodeURIComponent(`¡Hola ${o.customer.fullName}! 🐈‍⬛ Te escribimos de Jeans SLM / Indumentaria Salem.\n\n` + `📦 Te avisamos que tu pedido #${o.orderNumber} ya fue despachado y está en camino.\n` + `🚚 Transporte / Correo: ${o.shipping?.name || "Correo Argentino"}\n` + `📍 Código de seguimiento: ${trackingCode || "En proceso de asignación"}\n\n` + `¡Muchas gracias por tu compra! Avisanos cuando lo recibas ✨`);
+      window.open(`https://wa.me/${cleanPhone}?text=${msg}`, "_blank");
+    };
+    const handleCopyAddress = () => {
+      const text = `Destinatario: ${o.customer.fullName}\n` + `DNI: ${o.customer.dni || "-"}\n` + `Dirección: ${o.customer.address} ${o.customer.apartment ? "(Dpto " + o.customer.apartment + ")" : ""}\n` + `Localidad: ${o.customer.city}\n` + `CP: ${o.customer.postalCode || "-"}\n` + `Tel: ${o.customer.phone}\n` + `Transporte: ${o.shipping?.name || "Correo Argentino"}`;
+      navigator.clipboard.writeText(text);
+      addToast({
+        title: "¡Datos copiados! 📋",
+        description: "Listos para pegar en la web del correo.",
+        type: "success"
+      });
+    };
+    return /*#__PURE__*/React.createElement("div", {
+      key: o.orderNumber,
+      className: "p-4 rounded-2xl bg-[#FAF7F2] border border-[#E8E1D5] text-xs space-y-3 shadow-2xs"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-stone-200"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center gap-2"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "font-mono font-black text-sm text-stone-900"
+    }, "#", o.orderNumber), /*#__PURE__*/React.createElement("span", {
+      className: "text-[10px] text-stone-400 font-semibold"
+    }, o.date)), /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center gap-2"
+    }, /*#__PURE__*/React.createElement("select", {
+      value: o.status || "Pendiente de WhatsApp",
+      onChange: e => updateOrder(o.orderNumber, {
+        status: e.target.value
+      }),
+      className: `text-[11px] font-bold px-2.5 py-1 rounded-lg border cursor-pointer ${o.status === "Despachado 🚚" ? "bg-purple-100 text-purple-900 border-purple-300" : o.status === "Entregado ✅" ? "bg-emerald-100 text-emerald-900 border-emerald-300" : o.status === "Pago Confirmado 💳" ? "bg-blue-100 text-blue-900 border-blue-300" : "bg-amber-100 text-amber-900 border-amber-300"}`
+    }, /*#__PURE__*/React.createElement("option", {
+      value: "Pendiente de WhatsApp"
+    }, "\u23F3 Pendiente de WhatsApp"), /*#__PURE__*/React.createElement("option", {
+      value: "Pago Confirmado \uD83D\uDCB3"
+    }, "\uD83D\uDCB3 Pago Confirmado"), /*#__PURE__*/React.createElement("option", {
+      value: "En Preparaci\xF3n \uD83D\uDCE6"
+    }, "\uD83D\uDCE6 En Preparaci\xF3n"), /*#__PURE__*/React.createElement("option", {
+      value: "Despachado \uD83D\uDE9A"
+    }, "\uD83D\uDE9A Despachado"), /*#__PURE__*/React.createElement("option", {
+      value: "Entregado \u2705"
+    }, "\u2705 Entregado"), /*#__PURE__*/React.createElement("option", {
+      value: "Cancelado \u274C"
+    }, "\u274C Cancelado")), /*#__PURE__*/React.createElement("span", {
+      className: "text-pink-600 font-black text-sm"
+    }, formatPrice(o.total)), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => {
+        if (confirm(`¿Eliminar orden #${o.orderNumber}?`)) {
+          deleteOrder(o.orderNumber);
+        }
+      },
+      className: "p-1 text-stone-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 cursor-pointer",
+      title: "Eliminar orden"
+    }, /*#__PURE__*/React.createElement(Icons.Trash2, {
+      className: "w-3.5 h-3.5"
+    })))), /*#__PURE__*/React.createElement("div", {
+      className: "grid grid-cols-1 sm:grid-cols-2 gap-3 text-stone-700"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
+      className: "font-bold text-stone-900"
+    }, "\uD83D\uDC64 ", o.customer.fullName), /*#__PURE__*/React.createElement("p", {
+      className: "text-[11px] text-stone-500 mt-0.5"
+    }, "DNI: ", o.customer.dni || "No especificado", " \u2022 Email: ", o.customer.email || "-"), /*#__PURE__*/React.createElement("a", {
+      href: `https://wa.me/${cleanPhone}`,
+      target: "_blank",
+      rel: "noopener noreferrer",
+      className: "inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 hover:text-emerald-900 mt-1"
+    }, /*#__PURE__*/React.createElement(Icons.MessageCircle, {
+      className: "w-3.5 h-3.5 text-emerald-600"
+    }), /*#__PURE__*/React.createElement("span", null, "WhatsApp: ", o.customer.phone))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
+      className: "text-stone-700"
+    }, /*#__PURE__*/React.createElement("strong", null, "\uD83D\uDCCD Destino:"), " ", o.customer.address, " ", o.customer.apartment ? `(Dpto ${o.customer.apartment})` : ""), /*#__PURE__*/React.createElement("p", {
+      className: "text-[11px] text-stone-500 mt-0.5"
+    }, o.customer.city, " \u2022 CP ", o.customer.postalCode || "-"), /*#__PURE__*/React.createElement("p", {
+      className: "text-[11px] font-semibold text-stone-600 mt-1"
+    }, "\uD83D\uDE9A Transporte: ", /*#__PURE__*/React.createElement("strong", {
+      className: "text-stone-900"
+    }, o.shipping?.name || "Correo Argentino")))), o.items && o.items.length > 0 && /*#__PURE__*/React.createElement("div", {
+      className: "pt-2 border-t border-stone-200/70 flex flex-wrap gap-1.5 items-center"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "text-[10px] font-bold text-stone-500 mr-1"
+    }, "Prendas:"), o.items.map((it, idx) => /*#__PURE__*/React.createElement("span", {
+      key: idx,
+      className: "text-[11px] bg-white border border-stone-200 px-2 py-0.5 rounded-lg text-stone-800 font-medium"
+    }, it.title, " (", it.size, ") x", it.quantity))), /*#__PURE__*/React.createElement("div", {
+      className: "pt-2.5 border-t border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center gap-1.5 flex-1 max-w-sm"
+    }, /*#__PURE__*/React.createElement("input", {
+      type: "text",
+      placeholder: "C\xF3digo seguimiento (ej: AR123456)",
+      value: o.trackingNumber || "",
+      onChange: e => updateOrder(o.orderNumber, {
+        trackingNumber: e.target.value
+      }),
+      className: "flex-1 bg-white border border-stone-300 rounded-xl px-2.5 py-1.5 text-[11px] font-mono text-stone-900 focus:outline-none focus:border-pink-500"
+    }), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: handleNotifyTracking,
+      className: "bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl text-[11px] flex items-center gap-1 shrink-0 cursor-pointer transition-colors shadow-2xs",
+      title: "Avisar a la clienta por WhatsApp con el n\xFAmero de seguimiento"
+    }, /*#__PURE__*/React.createElement(Icons.MessageCircle, {
+      className: "w-3.5 h-3.5"
+    }), /*#__PURE__*/React.createElement("span", null, "Notificar"))), /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center gap-2 self-end sm:self-auto"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: handleCopyAddress,
+      className: "bg-white hover:bg-stone-100 border border-stone-300 text-stone-700 font-bold px-2.5 py-1.5 rounded-xl text-[11px] flex items-center gap-1 cursor-pointer transition-colors",
+      title: "Copiar datos para la web del correo"
+    }, /*#__PURE__*/React.createElement(Icons.Copy, {
+      className: "w-3.5 h-3.5"
+    }), /*#__PURE__*/React.createElement("span", null, "Copiar Datos")), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => setShippingLabelOrder(o),
+      className: "salem-gradient-btn text-white font-bold px-3 py-1.5 rounded-xl text-[11px] flex items-center gap-1 shadow-xs cursor-pointer",
+      title: "Generar e imprimir etiqueta para la caja o bolsa"
+    }, /*#__PURE__*/React.createElement("span", null, "\uD83C\uDFF7\uFE0F Generar Etiqueta")))));
+  })) : /*#__PURE__*/React.createElement("div", {
+    className: "py-14 text-center text-stone-400 bg-stone-50 rounded-2xl border border-dashed border-stone-200"
+  }, /*#__PURE__*/React.createElement(Icons.ShoppingBag, {
+    className: "w-10 h-10 mx-auto mb-2 opacity-30"
+  }), /*#__PURE__*/React.createElement("p", {
+    className: "font-bold text-stone-700"
+  }, "No hay pedidos registrados todav\xEDa"), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs text-stone-500 mt-0.5"
+  }, "Cuando tus clientas completen el checkout, aparecer\xE1n ac\xE1 listos para despachar."))), tab === "categories" && /*#__PURE__*/React.createElement("div", {
     className: "space-y-5 text-xs"
   }, /*#__PURE__*/React.createElement("form", {
     onSubmit: handleAddCategory,
@@ -4536,18 +4956,65 @@ function AdminModal() {
       colorsStr: e.target.value
     }),
     className: "w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs"
-  }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
-    className: "font-bold text-stone-700 block mb-1"
-  }, "Foto (ruta local o link de internet)"), /*#__PURE__*/React.createElement("input", {
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "p-3.5 bg-[#FAF7F2] border border-stone-300 rounded-2xl space-y-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold text-stone-800 block text-xs"
+  }, "Foto de la Prenda (Galer\xEDa o Archivo)"), productForm.image && /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200"
+  }, "\u2713 Foto Cargada")), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col sm:flex-row items-center gap-3.5"
+  }, productForm.image ? /*#__PURE__*/React.createElement("div", {
+    className: "relative w-24 h-32 rounded-xl overflow-hidden border-2 border-pink-400 bg-white shrink-0 shadow-xs group"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: productForm.image,
+    alt: "Prenda",
+    className: "w-full h-full object-cover"
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => setProductForm(prev => ({
+      ...prev,
+      image: ""
+    })),
+    className: "absolute top-1 right-1 bg-rose-600 hover:bg-rose-700 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-md cursor-pointer transition-transform hover:scale-110",
+    title: "Quitar foto"
+  }, "\u2715")) : /*#__PURE__*/React.createElement("div", {
+    className: "w-24 h-32 rounded-xl border-2 border-dashed border-stone-300 flex flex-col items-center justify-center text-stone-400 bg-white shrink-0"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-2xl mb-1"
+  }, "\uD83D\uDCF8"), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-center font-bold px-1"
+  }, "Sin foto")), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 space-y-2 w-full"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "file",
+    ref: fileInputRef,
+    onChange: handleImageFileChange,
+    accept: "image/*",
+    className: "hidden"
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    disabled: isUploadingImage,
+    onClick: () => fileInputRef.current && fileInputRef.current.click(),
+    className: "w-full py-2.5 px-3 bg-white hover:bg-pink-50 border border-pink-300 text-pink-700 font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+  }, /*#__PURE__*/React.createElement(Icons.Sparkles, {
+    className: "w-3.5 h-3.5 text-pink-500"
+  }), /*#__PURE__*/React.createElement("span", null, isUploadingImage ? "Optimizando foto..." : "Subir foto desde mi Celular o PC")), /*#__PURE__*/React.createElement("div", {
+    className: "space-y-1"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-stone-500 block font-medium"
+  }, "O pegar link de internet / archivo:"), /*#__PURE__*/React.createElement("input", {
     type: "text",
-    placeholder: "Ej: products/mi-foto.jpg o https://...",
+    placeholder: "https://... o products/foto.jpg",
     value: productForm.image,
     onChange: e => setProductForm({
       ...productForm,
       image: e.target.value
     }),
-    className: "w-full bg-[#FAF7F2] border border-stone-300 rounded-xl p-2.5 text-xs"
-  })), /*#__PURE__*/React.createElement("div", {
+    className: "w-full bg-white border border-stone-300 rounded-xl px-2.5 py-1.5 text-xs text-stone-800"
+  }))))), /*#__PURE__*/React.createElement("div", {
     className: "flex flex-wrap items-center gap-4 pt-1"
   }, /*#__PURE__*/React.createElement("label", {
     className: "flex items-center gap-2 cursor-pointer"
@@ -4594,7 +5061,10 @@ function AdminModal() {
   }, "Cancelar"), /*#__PURE__*/React.createElement("button", {
     type: "submit",
     className: "flex-1 salem-gradient-btn text-white font-bold py-2.5 rounded-xl shadow-md cursor-pointer"
-  }, "Guardar Prenda")))))));
+  }, "Guardar Prenda"))))), shippingLabelOrder && /*#__PURE__*/React.createElement(ShippingLabelModal, {
+    order: shippingLabelOrder,
+    onClose: () => setShippingLabelOrder(null)
+  })));
 }
 
 // --- SECCIÓN INSTAGRAM FEED & COMUNIDAD ---
