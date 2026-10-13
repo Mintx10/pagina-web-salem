@@ -31,14 +31,20 @@ function sendJson(res, statusCode, data) {
 }
 
 async function parseBody(req) {
-  if (req.body && typeof req.body === 'object') return req.body;
-  if (typeof req.body === 'string') {
-    try { return JSON.parse(req.body); } catch (e) { return {}; }
+  if (req.body) {
+    if (Buffer.isBuffer(req.body)) {
+      try { return JSON.parse(req.body.toString('utf8')); } catch (e) { return {}; }
+    }
+    if (typeof req.body === 'string') {
+      try { return JSON.parse(req.body); } catch (e) { return {}; }
+    }
+    if (typeof req.body === 'object') return req.body;
   }
   return new Promise((resolve) => {
     let raw = '';
     req.on('data', chunk => { raw += chunk; });
     req.on('end', () => {
+      if (!raw || !raw.trim()) return resolve({});
       try { resolve(JSON.parse(raw)); } catch (e) { resolve({}); }
     });
     req.on('error', () => resolve({}));
