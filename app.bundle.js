@@ -522,6 +522,11 @@ function StoreProvider({
   const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
   const [legalTab, setLegalTab] = useState("terms");
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isPaymentMethodsOpen, setIsPaymentMethodsOpen] = useState(false);
+  const [activePaymentProduct, setActivePaymentProduct] = useState(null);
+  const [shippingZip, setShippingZip] = useState(() => {
+    return localStorage.getItem("salem_shipping_zip") || "";
+  });
   const [toasts, setToasts] = useState([]);
 
   // Autenticación de Administradora Principal
@@ -562,6 +567,9 @@ function StoreProvider({
   useEffect(() => {
     if (appliedCoupon) localStorage.setItem("salem_coupon", JSON.stringify(appliedCoupon));else localStorage.removeItem("salem_coupon");
   }, [appliedCoupon]);
+  useEffect(() => {
+    if (shippingZip) localStorage.setItem("salem_shipping_zip", shippingZip);
+  }, [shippingZip]);
 
   // Cargar datos actualizados en vivo desde el Backend (/api/data)
   useEffect(() => {
@@ -652,6 +660,136 @@ function StoreProvider({
   const calculateInstallments = (amount, maxInst = 6) => {
     const perMonth = Math.round(amount / maxInst);
     return `${maxInst} cuotas sin interés de ${formatPrice(perMonth)}`;
+  };
+
+  // Cotizador Inteligente de Envíos en Argentina por Código Postal
+  const calculateShippingQuotes = (zip, subtotal = 0) => {
+    if (!zip || !zip.trim()) return null;
+    const cleanZip = zip.replace(/\D/g, "");
+    if (cleanZip.length < 3) return null;
+    const num = parseInt(cleanZip, 10);
+    const isFree = subtotal >= (settings.freeShippingThreshold || 45000);
+    let zone = "Interior del País";
+    let options = [];
+    if (num >= 1000 && num <= 1499) {
+      zone = "CABA (Ciudad Autónoma de Buenos Aires)";
+      options = [{
+        id: "flex",
+        name: "Moto Mensajería Flex en el Día",
+        carrier: "Envío Privado Express",
+        days: "Llega hoy comprando antes de 14 hs",
+        cost: 4200,
+        isFree: isFree
+      }, {
+        id: "correo_dom",
+        name: "Correo Argentino a Domicilio",
+        carrier: "Correo Argentino",
+        days: "2 a 3 días hábiles",
+        cost: isFree ? 0 : 4500,
+        isFree: isFree
+      }, {
+        id: "pickup",
+        name: "Retiro Gratis en Showroom Palermo Soho",
+        carrier: "Showroom Salem",
+        days: "Listo en 2 horas",
+        cost: 0,
+        isFree: true
+      }];
+    } else if (num >= 1500 && num <= 1999) {
+      zone = "GBA (Gran Buenos Aires Norte, Oeste y Sur)";
+      options = [{
+        id: "flex",
+        name: "Moto Mensajería Flex (GBA)",
+        carrier: "Envío Flex",
+        days: "Llega hoy o en 24 hs",
+        cost: 4900,
+        isFree: isFree
+      }, {
+        id: "correo_dom",
+        name: "Correo Argentino a Domicilio",
+        carrier: "Correo Argentino",
+        days: "2 a 3 días hábiles",
+        cost: isFree ? 0 : 4600,
+        isFree: isFree
+      }, {
+        id: "andreani",
+        name: "Andreani Prioritario",
+        carrier: "Andreani",
+        days: "24 a 48 hs",
+        cost: 6800,
+        isFree: false
+      }];
+    } else if (num >= 2000 && num <= 2999 || num >= 5000 && num <= 5999) {
+      zone = num >= 5000 ? "Córdoba & Región Centro" : "Santa Fe / Rosario";
+      options = [{
+        id: "correo_suc",
+        name: "Correo Argentino a Sucursal",
+        carrier: "Correo Argentino",
+        days: "2 a 4 días hábiles",
+        cost: isFree ? 0 : 4900,
+        isFree: isFree
+      }, {
+        id: "correo_dom",
+        name: "Correo Argentino a Domicilio",
+        carrier: "Correo Argentino",
+        days: "3 a 5 días hábiles",
+        cost: 5800,
+        isFree: false
+      }, {
+        id: "andreani",
+        name: "Andreani Express a Domicilio",
+        carrier: "Andreani",
+        days: "48 hs hábiles",
+        cost: 7500,
+        isFree: false
+      }];
+    } else if (num >= 6000 && num <= 7999) {
+      zone = "Interior Prov. de Buenos Aires (Costa / Sierras)";
+      options = [{
+        id: "correo_suc",
+        name: "Correo Argentino a Sucursal",
+        carrier: "Correo Argentino",
+        days: "2 a 4 días hábiles",
+        cost: isFree ? 0 : 4800,
+        isFree: isFree
+      }, {
+        id: "correo_dom",
+        name: "Correo Argentino a Domicilio",
+        carrier: "Correo Argentino",
+        days: "3 a 5 días hábiles",
+        cost: 5600,
+        isFree: false
+      }, {
+        id: "andreani",
+        name: "Andreani a Domicilio",
+        carrier: "Andreani",
+        days: "48 hs hábiles",
+        cost: 7200,
+        isFree: false
+      }];
+    } else {
+      zone = num >= 8000 ? "Patagonia & Sur Argentino" : "Norte / Cuyo / Litoral";
+      options = [{
+        id: "correo_suc",
+        name: "Correo Argentino Nacional",
+        carrier: "Correo Argentino",
+        days: "3 a 6 días hábiles",
+        cost: isFree ? 0 : 5400,
+        isFree: isFree
+      }, {
+        id: "andreani",
+        name: "Andreani Express Nacional",
+        carrier: "Andreani",
+        days: "3 a 4 días hábiles",
+        cost: 8200,
+        isFree: false
+      }];
+    }
+    return {
+      zone,
+      options,
+      postalCode: cleanZip
+    };
   };
 
   // Carrito
@@ -863,6 +1001,13 @@ function StoreProvider({
     adminAuth,
     setAdminAuth,
     saveToBackend,
+    shippingZip,
+    setShippingZip,
+    calculateShippingQuotes,
+    isPaymentMethodsOpen,
+    setIsPaymentMethodsOpen,
+    activePaymentProduct,
+    setActivePaymentProduct,
     orders,
     createOrder,
     toasts,
@@ -946,6 +1091,8 @@ function AnnouncementBar() {
 function Navbar() {
   const {
     settings,
+    products,
+    setQuickViewProduct,
     cartCount,
     cartSubtotal,
     formatPrice,
@@ -963,6 +1110,14 @@ function Navbar() {
   } = useStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  // Resultados predictivos de búsqueda en vivo con fotos
+  const matchingProducts = useMemo(() => {
+    if (!searchQuery || searchQuery.trim().length < 2) return [];
+    const q = searchQuery.toLowerCase().trim();
+    return products.filter(p => p.title.toLowerCase().includes(q) || p.category.toLowerCase().includes(q) || p.subtitle && p.subtitle.toLowerCase().includes(q) || p.tags && p.tags.some(t => t.toLowerCase().includes(q)));
+  }, [products, searchQuery]);
   const navigateToCategory = catId => {
     setSelectedCategory(catId);
     setCurrentView("catalog");
@@ -1019,7 +1174,7 @@ function Navbar() {
   }, "\u2728")), /*#__PURE__*/React.createElement("span", {
     className: "text-[10px] sm:text-[11px] font-bold tracking-wider text-pink-600 uppercase -mt-1"
   }, "Indumentaria Salem \uD83D\uDC08\u200D\u2B1B"))), /*#__PURE__*/React.createElement("div", {
-    className: "hidden md:flex flex-1 max-w-md lg:max-w-lg mx-3 lg:mx-6"
+    className: "hidden md:flex flex-1 max-w-md lg:max-w-lg mx-3 lg:mx-6 relative"
   }, /*#__PURE__*/React.createElement("div", {
     className: "relative w-full h-11"
   }, /*#__PURE__*/React.createElement("input", {
@@ -1027,15 +1182,75 @@ function Navbar() {
     placeholder: "Buscar jeans, corsets, camperas, faldas...",
     value: searchQuery,
     onChange: e => setSearchQuery(e.target.value),
+    onFocus: () => setIsSearchFocused(true),
     className: "w-full h-11 bg-stone-50 border border-stone-200 rounded-2xl pl-10 pr-9 text-xs font-medium text-stone-900 placeholder-stone-400 focus:bg-white focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-100 shadow-sm transition-all"
   }), /*#__PURE__*/React.createElement(Icons.Search, {
     className: "w-4 h-4 text-stone-400 absolute left-3.5 top-3.5"
   }), searchQuery && /*#__PURE__*/React.createElement("button", {
-    onClick: () => setSearchQuery(""),
-    className: "absolute right-3 top-3.5 text-stone-400 hover:text-stone-700"
+    onClick: () => {
+      setSearchQuery("");
+      setIsSearchFocused(false);
+    },
+    className: "absolute right-3 top-3.5 text-stone-400 hover:text-stone-700 cursor-pointer"
   }, /*#__PURE__*/React.createElement(Icons.X, {
     className: "w-3.5 h-3.5"
-  })))), /*#__PURE__*/React.createElement("div", {
+  }))), isSearchFocused && searchQuery.trim().length >= 2 && /*#__PURE__*/React.createElement("div", {
+    className: "absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-stone-200 z-50 p-2 overflow-hidden animate-slide-up"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between px-3 py-1.5 border-b border-stone-100 text-[10px] font-bold text-stone-400 uppercase tracking-wider"
+  }, /*#__PURE__*/React.createElement("span", null, "Prendas coincidentes"), /*#__PURE__*/React.createElement("span", {
+    className: "text-pink-600"
+  }, matchingProducts.length, " encontrados")), matchingProducts.length > 0 ? /*#__PURE__*/React.createElement("div", {
+    className: "divide-y divide-stone-50 max-h-80 overflow-y-auto"
+  }, matchingProducts.slice(0, 5).map(p => /*#__PURE__*/React.createElement("div", {
+    key: p.id,
+    onMouseDown: () => {
+      setQuickViewProduct(p);
+      setIsSearchFocused(false);
+      setSearchQuery("");
+    },
+    className: "p-2 flex items-center justify-between gap-3 hover:bg-pink-50/70 rounded-xl cursor-pointer transition-colors group"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2.5 min-w-0"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: p.images[0],
+    alt: p.title,
+    className: "w-10 h-12 object-cover rounded-lg border border-stone-200 shrink-0 group-hover:scale-105 transition-transform"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "min-w-0"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "font-bold text-xs text-stone-900 group-hover:text-pink-600 block truncate transition-colors"
+  }, p.title), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-1.5 text-[10px] text-stone-500 mt-0.5"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "uppercase text-pink-600 font-bold"
+  }, p.category), p.isBestSeller && /*#__PURE__*/React.createElement("span", {
+    className: "text-amber-600 font-bold"
+  }, "\uD83D\uDD25 Top"), p.isNew && /*#__PURE__*/React.createElement("span", {
+    className: "text-pink-600 font-bold"
+  }, "\u2728 Nuevo")))), /*#__PURE__*/React.createElement("div", {
+    className: "text-right shrink-0"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "font-black text-xs text-stone-900 block"
+  }, formatPrice(p.promoPrice || p.price)), p.promoPrice && /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-stone-400 line-through"
+  }, formatPrice(p.price)))))) : /*#__PURE__*/React.createElement("div", {
+    className: "p-4 text-center text-xs text-stone-500"
+  }, "No encontramos prendas para \"", /*#__PURE__*/React.createElement("strong", {
+    className: "text-stone-800"
+  }, searchQuery), "\"."), /*#__PURE__*/React.createElement("div", {
+    className: "p-2 border-t border-stone-100 bg-stone-50/60 rounded-b-xl text-center"
+  }, /*#__PURE__*/React.createElement("button", {
+    onMouseDown: () => {
+      setCurrentView("catalog");
+      setIsSearchFocused(false);
+      const elem = document.getElementById("catalogo-section");
+      if (elem) elem.scrollIntoView({
+        behavior: "smooth"
+      });
+    },
+    className: "text-xs font-bold text-pink-600 hover:text-pink-800 cursor-pointer"
+  }, "Ver todas las prendas en el cat\xE1logo \u2192")))), /*#__PURE__*/React.createElement("div", {
     className: "flex items-center gap-1.5 sm:gap-2.5 shrink-0"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => setSearchOpen(!searchOpen),
@@ -1113,7 +1328,7 @@ function Navbar() {
     value: searchQuery,
     onChange: e => setSearchQuery(e.target.value),
     autoFocus: true,
-    className: "w-full bg-white border border-[#E8E1D5] rounded-xl pl-9 pr-9 py-2.5 text-xs text-stone-900 focus:outline-none focus:border-pink-500"
+    className: "w-full bg-white border border-[#E8E1D5] rounded-xl pl-9 pr-9 py-2.5 text-xs text-stone-900 focus:outline-none focus:border-pink-500 shadow-sm"
   }), /*#__PURE__*/React.createElement(Icons.Search, {
     className: "w-4 h-4 text-stone-400 absolute left-3 top-3"
   }), searchQuery && /*#__PURE__*/React.createElement("button", {
@@ -1121,7 +1336,33 @@ function Navbar() {
     className: "absolute right-3 top-3 text-stone-400"
   }, /*#__PURE__*/React.createElement(Icons.X, {
     className: "w-4 h-4"
-  })))), mobileMenuOpen && /*#__PURE__*/React.createElement("div", {
+  }))), searchQuery.trim().length >= 2 && /*#__PURE__*/React.createElement("div", {
+    className: "mt-2 bg-white rounded-2xl shadow-xl border border-stone-200 overflow-hidden divide-y divide-stone-100 max-h-72 overflow-y-auto"
+  }, matchingProducts.length > 0 ? matchingProducts.slice(0, 4).map(p => /*#__PURE__*/React.createElement("div", {
+    key: p.id,
+    onClick: () => {
+      setQuickViewProduct(p);
+      setSearchOpen(false);
+      setSearchQuery("");
+    },
+    className: "p-2.5 flex items-center justify-between gap-3 hover:bg-pink-50/70 cursor-pointer"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2.5 min-w-0"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: p.images[0],
+    alt: p.title,
+    className: "w-10 h-12 object-cover rounded-lg border border-stone-200 shrink-0"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "min-w-0"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "font-bold text-xs text-stone-900 block truncate"
+  }, p.title), /*#__PURE__*/React.createElement("span", {
+    className: "uppercase text-[10px] text-pink-600 font-bold"
+  }, p.category))), /*#__PURE__*/React.createElement("span", {
+    className: "font-black text-xs text-stone-900 shrink-0"
+  }, formatPrice(p.promoPrice || p.price)))) : /*#__PURE__*/React.createElement("div", {
+    className: "p-3 text-center text-xs text-stone-500"
+  }, "No encontramos prendas para \"", searchQuery, "\"."))), mobileMenuOpen && /*#__PURE__*/React.createElement("div", {
     className: "lg:hidden py-4 border-t border-[#E8E1D5] space-y-2 animate-fade-in"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => {
@@ -1635,20 +1876,31 @@ function QuickViewModal() {
     toggleWishlist,
     setIsSizeGuideOpen,
     setSizeGuideCategory,
-    settings
+    settings,
+    shippingZip,
+    setShippingZip,
+    calculateShippingQuotes,
+    setIsPaymentMethodsOpen,
+    setActivePaymentProduct
   } = useStore();
   const [activeImgIdx, setActiveImgIdx] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const [postalCode, setPostalCode] = useState("");
+  const [postalCode, setPostalCode] = useState(shippingZip || "");
   const [shippingCalculated, setShippingCalculated] = useState(null);
   const [activeTab, setActiveTab] = useState("desc");
   useEffect(() => {
     if (quickViewProduct) {
       setActiveImgIdx(0);
       setQuantity(1);
-      setShippingCalculated(null);
+      if (shippingZip) {
+        setPostalCode(shippingZip);
+        const quote = calculateShippingQuotes(shippingZip, quickViewProduct.promoPrice || quickViewProduct.price);
+        setShippingCalculated(quote);
+      } else {
+        setShippingCalculated(null);
+      }
       if (quickViewProduct.sizes && quickViewProduct.sizes.length > 0) {
         setSelectedSize(quickViewProduct.sizes[0].size);
       }
@@ -1663,27 +1915,9 @@ function QuickViewModal() {
   const handleCalcShipping = e => {
     e.preventDefault();
     if (!postalCode.trim()) return;
-    const cp = parseInt(postalCode);
-    let zone = "Buenos Aires & CABA";
-    let days = "2 a 3 días hábiles";
-    if (cp >= 5000 && cp < 6000) {
-      zone = "Córdoba & Región Centro";
-      days = "2 a 4 días";
-    } else if (cp >= 2000 && cp < 3000) {
-      zone = "Santa Fe & Rosario";
-      days = "2 a 3 días";
-    } else if (cp >= 8000) {
-      zone = "Patagonia";
-      days = "3 a 5 días";
-    } else if (cp >= 4000) {
-      zone = "NOA / Norte Argentino";
-      days = "3 a 5 días";
-    }
-    setShippingCalculated({
-      zone,
-      days,
-      cost: currentPrice >= settings.freeShippingThreshold ? 0 : 4900
-    });
+    setShippingZip(postalCode.trim());
+    const quote = calculateShippingQuotes(postalCode.trim(), currentPrice);
+    setShippingCalculated(quote);
   };
   const handleWhatsAppDirect = () => {
     const text = encodeURIComponent(`Hola Salem! 🐈‍⬛ Quiero consultar / comprar:\n- ${quickViewProduct.title}\n- Talle: ${selectedSize}\n- Color: ${selectedColor}\n- Precio: ${formatPrice(currentPrice)}\n¿Tienen disponibilidad para envío?`);
@@ -1752,8 +1986,15 @@ function QuickViewModal() {
   }, formatPrice(quickViewProduct.price)), /*#__PURE__*/React.createElement("span", {
     className: "text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md"
   }, "15% OFF Extra por Transferencia")), /*#__PURE__*/React.createElement("div", {
-    className: "p-2.5 rounded-xl bg-pink-50/70 border border-pink-200/60 text-xs text-pink-900 font-medium mb-4"
-  }, "\uD83D\uDCB3 ", /*#__PURE__*/React.createElement("strong", null, calculateInstallments(currentPrice, 6)), " con todas las tarjetas"), /*#__PURE__*/React.createElement("div", {
+    className: "p-2.5 rounded-xl bg-pink-50/70 border border-pink-200/60 text-xs text-pink-900 font-medium mb-4 flex items-center justify-between"
+  }, /*#__PURE__*/React.createElement("div", null, "\uD83D\uDCB3 ", /*#__PURE__*/React.createElement("strong", null, calculateInstallments(currentPrice, 6)), " con todas las tarjetas"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => {
+      setActivePaymentProduct(quickViewProduct);
+      setIsPaymentMethodsOpen(true);
+    },
+    className: "text-[11px] font-bold text-pink-700 hover:text-pink-900 underline ml-2 shrink-0 cursor-pointer"
+  }, "Ver cuotas")), /*#__PURE__*/React.createElement("div", {
     className: "mb-4"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex items-center justify-between mb-2"
@@ -1829,20 +2070,31 @@ function QuickViewModal() {
     className: "flex gap-2"
   }, /*#__PURE__*/React.createElement("input", {
     type: "text",
-    placeholder: "Tu C\xF3digo Postal (ej: 1425)",
+    placeholder: "Tu C\xF3digo Postal (ej: 1414, 5000...)",
     value: postalCode,
     onChange: e => setPostalCode(e.target.value),
     className: "flex-1 bg-white border border-stone-300 rounded-xl px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-pink-500"
   }), /*#__PURE__*/React.createElement("button", {
     type: "submit",
-    className: "bg-stone-900 text-white font-bold text-xs px-3.5 py-2 rounded-xl hover:bg-pink-600 transition-colors"
+    className: "bg-stone-900 text-white font-bold text-xs px-3.5 py-2 rounded-xl hover:bg-pink-600 transition-colors cursor-pointer"
   }, "Calcular")), shippingCalculated && /*#__PURE__*/React.createElement("div", {
-    className: "mt-2.5 pt-2 border-t border-stone-200 text-xs text-stone-700 space-y-1"
-  }, /*#__PURE__*/React.createElement("p", {
-    className: "font-semibold text-stone-900"
-  }, "\uD83D\uDCCD Zona estimada: ", shippingCalculated.zone), /*#__PURE__*/React.createElement("p", null, "\uD83D\uDE9A Tiempo: ", shippingCalculated.days), /*#__PURE__*/React.createElement("p", {
-    className: "font-bold text-pink-600"
-  }, "Costo: ", shippingCalculated.cost === 0 ? "¡ENVÍO GRATIS!" : formatPrice(shippingCalculated.cost)))), /*#__PURE__*/React.createElement("div", {
+    className: "mt-3 pt-2.5 border-t border-stone-200 text-xs space-y-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between text-stone-700 font-bold text-[11px]"
+  }, /*#__PURE__*/React.createElement("span", null, "\uD83D\uDCCD Destino: ", shippingCalculated.zone), /*#__PURE__*/React.createElement("span", {
+    className: "text-stone-400 font-mono"
+  }, "CP ", shippingCalculated.postalCode)), /*#__PURE__*/React.createElement("div", {
+    className: "space-y-1.5 pt-1"
+  }, shippingCalculated.options.map(opt => /*#__PURE__*/React.createElement("div", {
+    key: opt.id,
+    className: "p-2.5 rounded-xl bg-white border border-stone-200/90 flex items-center justify-between gap-2 shadow-xs"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+    className: "font-bold text-stone-900 block text-xs"
+  }, opt.name), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-stone-500"
+  }, opt.days)), /*#__PURE__*/React.createElement("span", {
+    className: `font-black text-xs shrink-0 ${opt.isFree && opt.cost === 0 ? "text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md" : "text-stone-900"}`
+  }, opt.cost === 0 ? "¡GRATIS! 🎉" : formatPrice(opt.cost))))))), /*#__PURE__*/React.createElement("div", {
     className: "border-t border-stone-200 pt-3"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex border-b border-stone-200 gap-4 text-xs font-bold text-stone-500 mb-3"
@@ -1902,11 +2154,29 @@ function CartDrawer() {
     discountAmount,
     formatPrice,
     setIsCheckoutOpen,
-    settings
+    settings,
+    shippingZip,
+    setShippingZip,
+    calculateShippingQuotes,
+    setIsPaymentMethodsOpen,
+    setActivePaymentProduct
   } = useStore();
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
   const [shippingMethod, setShippingMethod] = useState(settings.shippingMethods[0]);
+  const [zipInput, setZipInput] = useState(shippingZip || "");
+  const [zipQuotes, setZipQuotes] = useState(() => shippingZip ? calculateShippingQuotes(shippingZip, cartSubtotal) : null);
+  const [selectedQuoteId, setSelectedQuoteId] = useState(null);
+  useEffect(() => {
+    if (shippingZip) {
+      setZipInput(shippingZip);
+      const quotes = calculateShippingQuotes(shippingZip, cartSubtotal);
+      setZipQuotes(quotes);
+      if (quotes && quotes.options && quotes.options.length > 0) {
+        setSelectedQuoteId(prev => prev || quotes.options[0].id);
+      }
+    }
+  }, [shippingZip, cartSubtotal]);
   if (!isCartOpen) return null;
   const handleApplyCoupon = e => {
     e.preventDefault();
@@ -1919,7 +2189,18 @@ function CartDrawer() {
       setCouponCode("");
     }
   };
-  const finalShippingCost = cartSubtotal >= freeShippingThreshold || shippingMethod.id === "pickup_store" ? 0 : shippingMethod.cost;
+  const handleCalcZip = e => {
+    if (e) e.preventDefault();
+    if (!zipInput.trim()) return;
+    setShippingZip(zipInput.trim());
+    const quotes = calculateShippingQuotes(zipInput.trim(), cartSubtotal);
+    setZipQuotes(quotes);
+    if (quotes && quotes.options && quotes.options.length > 0) {
+      setSelectedQuoteId(quotes.options[0].id);
+    }
+  };
+  const activeSelectedQuote = zipQuotes?.options?.find(o => o.id === selectedQuoteId);
+  const finalShippingCost = activeSelectedQuote ? activeSelectedQuote.cost : cartSubtotal >= freeShippingThreshold || shippingMethod.id === "pickup_store" ? 0 : shippingMethod.cost;
   const total = Math.max(0, cartSubtotal - discountAmount + finalShippingCost);
   return /*#__PURE__*/React.createElement("div", {
     className: "fixed inset-0 z-50 overflow-hidden animate-fade-in"
@@ -2039,20 +2320,69 @@ function CartDrawer() {
   }, "Aplicar")), couponError && /*#__PURE__*/React.createElement("p", {
     className: "text-[11px] text-rose-600 font-semibold"
   }, couponError), /*#__PURE__*/React.createElement("div", {
-    className: "text-xs space-y-1"
+    className: "bg-white p-3 rounded-2xl border border-stone-200 space-y-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "font-bold text-stone-700 block"
-  }, "M\xE9todo de Entrega:"), /*#__PURE__*/React.createElement("select", {
+    className: "text-xs font-bold text-stone-800 flex items-center gap-1.5"
+  }, /*#__PURE__*/React.createElement(Icons.Truck, {
+    className: "w-4 h-4 text-pink-600"
+  }), /*#__PURE__*/React.createElement("span", null, "Calcular Env\xEDo por C\xF3digo Postal")), zipQuotes && /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] font-bold text-pink-700 bg-pink-50 px-2 py-0.5 rounded-md border border-pink-200"
+  }, "CP ", zipQuotes.postalCode)), /*#__PURE__*/React.createElement("form", {
+    onSubmit: handleCalcZip,
+    className: "flex gap-2"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    placeholder: "Ej: 1414, 5000...",
+    value: zipInput,
+    onChange: e => setZipInput(e.target.value),
+    className: "flex-1 bg-stone-50 border border-stone-300 rounded-xl px-3 py-1.5 text-xs text-stone-900 focus:outline-none focus:border-pink-500"
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "submit",
+    className: "bg-stone-900 text-white font-bold text-xs px-3 py-1.5 rounded-xl hover:bg-pink-600 transition-colors cursor-pointer"
+  }, "Calcular")), zipQuotes ? /*#__PURE__*/React.createElement("div", {
+    className: "pt-2 border-t border-stone-100 space-y-1.5"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] font-bold text-stone-500 block"
+  }, "\uD83D\uDCCD ", zipQuotes.zone), /*#__PURE__*/React.createElement("div", {
+    className: "space-y-1 max-h-32 overflow-y-auto"
+  }, zipQuotes.options.map(opt => {
+    const isSelected = selectedQuoteId === opt.id;
+    return /*#__PURE__*/React.createElement("div", {
+      key: opt.id,
+      onClick: () => setSelectedQuoteId(opt.id),
+      className: `p-2 rounded-xl border text-xs cursor-pointer flex items-center justify-between transition-all ${isSelected ? "border-pink-600 bg-pink-50/70 ring-1 ring-pink-500" : "border-stone-200 hover:border-stone-300 bg-white"}`
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "min-w-0 pr-2"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "font-bold text-stone-900 flex items-center gap-1.5 text-[11px]"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: `w-2.5 h-2.5 rounded-full border flex items-center justify-center ${isSelected ? "border-pink-600 bg-pink-600" : "border-stone-300"}`
+    }, isSelected && /*#__PURE__*/React.createElement("span", {
+      className: "w-1 h-1 bg-white rounded-full"
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "truncate"
+    }, opt.name)), /*#__PURE__*/React.createElement("span", {
+      className: "text-[10px] text-stone-500 block pl-4"
+    }, opt.days)), /*#__PURE__*/React.createElement("span", {
+      className: `font-black text-xs shrink-0 ${opt.cost === 0 ? "text-emerald-700 font-bold" : "text-stone-900"}`
+    }, opt.cost === 0 ? "¡GRATIS! 🎉" : formatPrice(opt.cost)));
+  }))) : /*#__PURE__*/React.createElement("div", {
+    className: "pt-2 border-t border-stone-100"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "font-bold text-stone-600 text-[11px] block mb-1"
+  }, "O seleccion\xE1 m\xE9todo est\xE1ndar:"), /*#__PURE__*/React.createElement("select", {
     value: shippingMethod.id,
     onChange: e => {
       const found = settings.shippingMethods.find(m => m.id === e.target.value);
       if (found) setShippingMethod(found);
     },
-    className: "w-full bg-white border border-stone-300 rounded-xl px-3 py-2 text-xs font-medium text-stone-800 focus:outline-none"
+    className: "w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-1.5 text-xs font-medium text-stone-800 focus:outline-none"
   }, settings.shippingMethods.map(m => /*#__PURE__*/React.createElement("option", {
     key: m.id,
     value: m.id
-  }, m.name, " (", cartSubtotal >= freeShippingThreshold && m.id !== "andreani_exp" ? "GRATIS" : formatPrice(m.cost), ")")))), /*#__PURE__*/React.createElement("div", {
+  }, m.name, " (", cartSubtotal >= freeShippingThreshold && m.id !== "andreani_exp" ? "GRATIS" : formatPrice(m.cost), ")"))))), /*#__PURE__*/React.createElement("div", {
     className: "space-y-1.5 text-xs text-stone-600 pt-2 border-t border-stone-200"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex justify-between"
@@ -2062,13 +2392,26 @@ function CartDrawer() {
     className: "flex justify-between text-pink-600 font-bold"
   }, /*#__PURE__*/React.createElement("span", null, "Descuento cup\xF3n:"), /*#__PURE__*/React.createElement("span", null, "-", formatPrice(discountAmount))), /*#__PURE__*/React.createElement("div", {
     className: "flex justify-between"
-  }, /*#__PURE__*/React.createElement("span", null, "Env\xEDo:"), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", null, "Env\xEDo (", activeSelectedQuote ? activeSelectedQuote.carrier : shippingMethod.name, "):"), /*#__PURE__*/React.createElement("span", {
     className: "font-bold text-stone-900"
   }, finalShippingCost === 0 ? "GRATIS" : formatPrice(finalShippingCost))), /*#__PURE__*/React.createElement("div", {
     className: "flex justify-between text-base font-black text-stone-900 pt-2 border-t border-stone-300"
   }, /*#__PURE__*/React.createElement("span", null, "Total Final:"), /*#__PURE__*/React.createElement("span", {
     className: "text-pink-600"
-  }, formatPrice(total))), /*#__PURE__*/React.createElement("p", {
+  }, formatPrice(total))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => {
+      setActivePaymentProduct({
+        title: `Tu Carrito (${cart.length} prendas)`,
+        price: total,
+        image: cart[0]?.image
+      });
+      setIsPaymentMethodsOpen(true);
+    },
+    className: "w-full py-2 px-3 bg-pink-50 hover:bg-pink-100/80 rounded-xl border border-pink-200/80 text-xs font-bold text-pink-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+  }, /*#__PURE__*/React.createElement("span", null, "\uD83D\uDCB3 Ver cuotas con tarjeta y planes de pago"), /*#__PURE__*/React.createElement(Icons.ChevronRight, {
+    className: "w-3.5 h-3.5"
+  })), /*#__PURE__*/React.createElement("p", {
     className: "text-[10px] text-emerald-700 font-semibold text-right"
   }, "Pagando por Transferencia abon\xE1s ", formatPrice(Math.round(total * 0.85)), " (15% OFF)")), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
@@ -2671,6 +3014,320 @@ function WholesaleModal() {
   }, /*#__PURE__*/React.createElement(Icons.MessageCircle, {
     className: "w-5 h-5"
   }), /*#__PURE__*/React.createElement("span", null, "Contactar a un Asesor Mayorista por WhatsApp"))));
+}
+
+// --- MODAL DE MEDIOS DE PAGO Y CUOTAS ---
+function PaymentMethodsModal() {
+  const {
+    isPaymentMethodsOpen,
+    setIsPaymentMethodsOpen,
+    activePaymentProduct,
+    cartSubtotal,
+    formatPrice
+  } = useStore();
+  const [activeTab, setActiveTab] = useState("tarjetas");
+  if (!isPaymentMethodsOpen) return null;
+  const refPrice = activePaymentProduct?.promoPrice || activePaymentProduct?.price || cartSubtotal || 42000;
+  const transferPrice = Math.round(refPrice * 0.85);
+  const transferSavings = refPrice - transferPrice;
+  const installment1 = refPrice;
+  const installment3 = Math.round(refPrice / 3);
+  const installment6 = Math.round(refPrice / 6);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-fade-in"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 bg-stone-900/60 backdrop-blur-sm",
+    onClick: () => setIsPaymentMethodsOpen(false)
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "relative z-10 w-full max-w-lg bg-white rounded-3xl border border-[#E8E1D5] shadow-2xl p-5 sm:p-7 text-stone-900 animate-slide-up max-h-[90vh] overflow-y-auto"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between pb-4 border-b border-stone-200 mb-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center text-pink-600 font-bold text-sm"
+  }, "\uD83D\uDCB3"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", {
+    className: "font-display font-black text-lg text-stone-900 leading-tight"
+  }, "Medios de Pago & Financiaci\xF3n"), /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px] text-stone-500"
+  }, "Hasta 6 cuotas sin inter\xE9s y 15% OFF por transferencia"))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setIsPaymentMethodsOpen(false),
+    className: "p-2 text-stone-400 hover:text-stone-900 rounded-xl hover:bg-stone-100 transition-colors"
+  }, /*#__PURE__*/React.createElement(Icons.X, {
+    className: "w-5 h-5"
+  }))), activePaymentProduct && /*#__PURE__*/React.createElement("div", {
+    className: "p-3 rounded-2xl bg-stone-50 border border-stone-200 mb-4 flex items-center gap-3"
+  }, activePaymentProduct.image && /*#__PURE__*/React.createElement("img", {
+    src: activePaymentProduct.image,
+    alt: activePaymentProduct.title,
+    className: "w-12 h-14 object-cover rounded-xl border border-stone-200 bg-white shrink-0"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 min-w-0"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] font-bold text-pink-600 uppercase tracking-wider block"
+  }, "Calculando sobre:"), /*#__PURE__*/React.createElement("h4", {
+    className: "font-display font-bold text-xs text-stone-900 truncate"
+  }, activePaymentProduct.title), /*#__PURE__*/React.createElement("span", {
+    className: "text-sm font-black text-stone-900"
+  }, formatPrice(refPrice)))), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-4 gap-1 p-1 bg-stone-100 rounded-2xl mb-4 text-center"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setActiveTab("tarjetas"),
+    className: `py-2 px-1 text-xs font-bold rounded-xl transition-all cursor-pointer ${activeTab === "tarjetas" ? "bg-white text-stone-900 shadow-xs" : "text-stone-600 hover:text-stone-900"}`
+  }, "Tarjetas"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setActiveTab("transferencia"),
+    className: `py-2 px-1 text-xs font-bold rounded-xl transition-all relative cursor-pointer ${activeTab === "transferencia" ? "bg-white text-stone-900 shadow-xs" : "text-stone-600 hover:text-stone-900"}`
+  }, "Transferencia", /*#__PURE__*/React.createElement("span", {
+    className: "absolute -top-1.5 -right-1 bg-emerald-600 text-white text-[9px] font-black px-1 rounded-full"
+  }, "-15%")), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setActiveTab("debito"),
+    className: `py-2 px-1 text-xs font-bold rounded-xl transition-all cursor-pointer ${activeTab === "debito" ? "bg-white text-stone-900 shadow-xs" : "text-stone-600 hover:text-stone-900"}`
+  }, "D\xE9bito"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setActiveTab("efectivo"),
+    className: `py-2 px-1 text-xs font-bold rounded-xl transition-all cursor-pointer ${activeTab === "efectivo" ? "bg-white text-stone-900 shadow-xs" : "text-stone-600 hover:text-stone-900"}`
+  }, "Efectivo")), activeTab === "tarjetas" && /*#__PURE__*/React.createElement("div", {
+    className: "space-y-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-wrap items-center gap-1.5 p-2.5 bg-stone-50 rounded-xl border border-stone-200/80 mb-2"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] font-bold text-stone-500 mr-1"
+  }, "Tarjetas aceptadas:"), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] font-bold bg-white px-2 py-0.5 rounded border border-stone-200 text-stone-700"
+  }, "Visa"), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] font-bold bg-white px-2 py-0.5 rounded border border-stone-200 text-stone-700"
+  }, "Mastercard"), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] font-bold bg-white px-2 py-0.5 rounded border border-stone-200 text-stone-700"
+  }, "American Express"), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] font-bold bg-white px-2 py-0.5 rounded border border-stone-200 text-stone-700"
+  }, "Naranja X"), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] font-bold bg-white px-2 py-0.5 rounded border border-stone-200 text-stone-700"
+  }, "Cabal")), /*#__PURE__*/React.createElement("div", {
+    className: "border border-stone-200 rounded-2xl divide-y divide-stone-100 overflow-hidden"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "p-3 bg-white flex items-center justify-between"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+    className: "text-xs font-bold text-stone-900 block"
+  }, "1 cuota sin inter\xE9s"), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-stone-500"
+  }, "Mismo precio de lista")), /*#__PURE__*/React.createElement("div", {
+    className: "text-right"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-xs font-black text-stone-900"
+  }, formatPrice(installment1)))), /*#__PURE__*/React.createElement("div", {
+    className: "p-3 bg-pink-50/40 flex items-center justify-between"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+    className: "text-xs font-bold text-stone-900 block"
+  }, "3 cuotas fijas sin inter\xE9s"), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-pink-700 font-semibold"
+  }, "\uD83D\uDD25 \xA1Sin recargo alguno!")), /*#__PURE__*/React.createElement("div", {
+    className: "text-right"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-xs font-black text-stone-900"
+  }, "3 de ", formatPrice(installment3)), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-stone-500 block"
+  }, "Total: ", formatPrice(refPrice)))), /*#__PURE__*/React.createElement("div", {
+    className: "p-3 bg-pink-100/50 flex items-center justify-between"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+    className: "text-xs font-bold text-pink-950 block"
+  }, "6 cuotas fijas sin inter\xE9s"), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-pink-700 font-bold"
+  }, "\u2728 Financiaci\xF3n oficial Salem")), /*#__PURE__*/React.createElement("div", {
+    className: "text-right"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-xs font-black text-pink-700"
+  }, "6 de ", formatPrice(installment6)), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-stone-500 block"
+  }, "Total: ", formatPrice(refPrice))))), /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px] text-stone-500 italic mt-2"
+  }, "* Tus datos viajan 100% encriptados con pasarela certificada SSL de Mercado Pago.")), activeTab === "transferencia" && /*#__PURE__*/React.createElement("div", {
+    className: "space-y-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "p-4 rounded-2xl bg-emerald-50 border border-emerald-200"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between mb-2"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-xs font-black text-emerald-900 uppercase tracking-wide"
+  }, "Descuento Transferencia Bancaria"), /*#__PURE__*/React.createElement("span", {
+    className: "bg-emerald-600 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full"
+  }, "15% OFF")), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-baseline gap-2 mb-1"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-2xl font-black text-emerald-950"
+  }, formatPrice(transferPrice)), /*#__PURE__*/React.createElement("span", {
+    className: "text-xs text-stone-400 line-through"
+  }, formatPrice(refPrice))), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs font-semibold text-emerald-800"
+  }, "\uD83C\uDF89 Te ahorr\xE1s ", /*#__PURE__*/React.createElement("strong", null, formatPrice(transferSavings)), " abonando por transferencia directa.")), /*#__PURE__*/React.createElement("div", {
+    className: "p-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-xs space-y-2"
+  }, /*#__PURE__*/React.createElement("h5", {
+    className: "font-bold text-stone-800"
+  }, "Pasos para aprovechar el 15% OFF:"), /*#__PURE__*/React.createElement("ol", {
+    className: "list-decimal list-inside space-y-1 text-stone-600 text-[11px] leading-relaxed"
+  }, /*#__PURE__*/React.createElement("li", null, "Seleccion\xE1 ", /*#__PURE__*/React.createElement("strong", null, "Transferencia Bancaria"), " en el checkout."), /*#__PURE__*/React.createElement("li", null, "Te enviamos los datos de nuestra cuenta bancaria oficial al instante."), /*#__PURE__*/React.createElement("li", null, "Nos envi\xE1s el comprobante por WhatsApp y despachamos tu paquete de inmediato.")))), activeTab === "debito" && /*#__PURE__*/React.createElement("div", {
+    className: "space-y-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "p-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-xs space-y-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-start gap-3"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-2xl"
+  }, "\uD83D\uDCF1"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h5", {
+    className: "font-bold text-stone-900"
+  }, "Billeteras Virtuales & Apps"), /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px] text-stone-600 mt-0.5"
+  }, "Dinero en cuenta de Mercado Pago, Cuenta DNI, Modo, Ual\xE1, Personal Pay, Lemon y Prex."))), /*#__PURE__*/React.createElement("div", {
+    className: "pt-2 border-t border-stone-200 flex items-start gap-3"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-2xl"
+  }, "\uD83D\uDCB3"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h5", {
+    className: "font-bold text-stone-900"
+  }, "Tarjetas de D\xE9bito"), /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px] text-stone-600 mt-0.5"
+  }, "Visa D\xE9bito, Maestro, Mastercard D\xE9bito y Cabal D\xE9bito. Acreditaci\xF3n autom\xE1tica en el acto."))))), activeTab === "efectivo" && /*#__PURE__*/React.createElement("div", {
+    className: "space-y-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "p-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-xs space-y-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-start gap-3"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-2xl"
+  }, "\uD83C\uDFEC"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h5", {
+    className: "font-bold text-stone-900"
+  }, "Showroom Palermo Soho (CABA)"), /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px] text-stone-600 mt-0.5"
+  }, "Pod\xE9s abonar en efectivo con 15% OFF al retirar tu pedido por nuestro local."))), /*#__PURE__*/React.createElement("div", {
+    className: "pt-2 border-t border-stone-200 flex items-start gap-3"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-2xl"
+  }, "\uD83C\uDFEA"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h5", {
+    className: "font-bold text-stone-900"
+  }, "Rapipago y Pago F\xE1cil"), /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px] text-stone-600 mt-0.5"
+  }, "Gener\xE1s el cup\xF3n oficial de pago y abon\xE1s en cualquier sucursal del pa\xEDs."))))), /*#__PURE__*/React.createElement("div", {
+    className: "mt-5"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setIsPaymentMethodsOpen(false),
+    className: "w-full bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs py-3 rounded-xl transition-all cursor-pointer"
+  }, "Cerrar ventana"))));
+}
+
+// --- NOTIFICACIONES EN VIVO DE PRUEBA SOCIAL (SOCIAL PROOF TOASTS) ---
+function SocialProofToast() {
+  const {
+    products,
+    setQuickViewProduct
+  } = useStore();
+  const [currentNotification, setCurrentNotification] = useState(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
+  const buyerProfiles = [{
+    name: "Sofía M.",
+    city: "Palermo Soho, CABA",
+    time: "hace 3 min"
+  }, {
+    name: "Camila R.",
+    city: "Córdoba Capital",
+    time: "hace 8 min"
+  }, {
+    name: "Martina G.",
+    city: "Rosario, Santa Fe",
+    time: "hace 14 min"
+  }, {
+    name: "Lucía P.",
+    city: "San Isidro, Bs As",
+    time: "hace 19 min"
+  }, {
+    name: "Valentina D.",
+    city: "Mendoza Capital",
+    time: "hace 25 min"
+  }, {
+    name: "Julieta V.",
+    city: "La Plata, Bs As",
+    time: "hace 31 min"
+  }, {
+    name: "Micaela B.",
+    city: "Mar del Plata",
+    time: "hace 39 min"
+  }, {
+    name: "Constanza F.",
+    city: "Tucumán",
+    time: "hace 47 min"
+  }, {
+    name: "Agustina T.",
+    city: "Neuquén",
+    time: "hace 54 min"
+  }, {
+    name: "Florencia S.",
+    city: "Belgrano, CABA",
+    time: "hace 1 hora"
+  }];
+  useEffect(() => {
+    if (isDismissed || !products || products.length === 0) return;
+    let hideTimer = null;
+    let nextTimer = null;
+    const showRandomNotification = () => {
+      if (isDismissed) return;
+      const randomProduct = products[Math.floor(Math.random() * products.length)];
+      const randomBuyer = buyerProfiles[Math.floor(Math.random() * buyerProfiles.length)];
+      setCurrentNotification({
+        ...randomBuyer,
+        product: randomProduct
+      });
+      setIsVisible(true);
+      hideTimer = setTimeout(() => {
+        setIsVisible(false);
+        const delay = 25000 + Math.random() * 15000;
+        nextTimer = setTimeout(showRandomNotification, delay);
+      }, 6000);
+    };
+    const initialTimer = setTimeout(showRandomNotification, 9000);
+    return () => {
+      clearTimeout(initialTimer);
+      clearTimeout(hideTimer);
+      clearTimeout(nextTimer);
+    };
+  }, [products, isDismissed]);
+  if (isDismissed || !isVisible || !currentNotification) return null;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "fixed bottom-4 left-4 z-40 max-w-[340px] pointer-events-none animate-slide-up"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pointer-events-auto bg-white/95 backdrop-blur-md border border-[#E8E1D5] rounded-2xl shadow-xl p-3 flex items-center gap-3 relative transition-all duration-300"
+  }, /*#__PURE__*/React.createElement("div", {
+    onClick: () => setQuickViewProduct(currentNotification.product),
+    className: "relative w-12 h-14 rounded-xl overflow-hidden shrink-0 border border-stone-200 cursor-pointer bg-stone-100 group"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: currentNotification.product.image,
+    alt: currentNotification.product.title,
+    className: "w-full h-full object-cover group-hover:scale-105 transition-transform"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "absolute inset-0 bg-pink-500/10"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 min-w-0 pr-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-1.5 text-[11px] text-stone-500"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "font-bold text-stone-900"
+  }, currentNotification.name), /*#__PURE__*/React.createElement("span", null, "de ", currentNotification.city)), /*#__PURE__*/React.createElement("p", {
+    onClick: () => setQuickViewProduct(currentNotification.product),
+    className: "text-xs font-bold text-stone-900 truncate hover:text-pink-600 transition-colors cursor-pointer mt-0.5"
+  }, currentNotification.product.title), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2 mt-1"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"
+  }), "Compra verificada"), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-stone-400 font-medium"
+  }, currentNotification.time))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setIsVisible(false);
+      setIsDismissed(true);
+    },
+    className: "absolute top-2 right-2 p-1 text-stone-400 hover:text-stone-700 rounded-lg hover:bg-stone-100 cursor-pointer",
+    title: "Ocultar notificaciones"
+  }, /*#__PURE__*/React.createElement(Icons.X, {
+    className: "w-3.5 h-3.5"
+  }))));
 }
 
 // --- MODAL LEGAL & BOTÓN DE ARREPENTIMIENTO ---
@@ -4159,7 +4816,7 @@ function App() {
     className: "min-h-screen flex flex-col bg-[#FAF7F2] text-[#1C1917] selection:bg-pink-200 selection:text-pink-900"
   }, /*#__PURE__*/React.createElement(AnnouncementBar, null), /*#__PURE__*/React.createElement(Navbar, null), /*#__PURE__*/React.createElement("main", {
     className: "flex-1"
-  }, currentView === "home" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Hero, null), /*#__PURE__*/React.createElement(BenefitsBar, null), /*#__PURE__*/React.createElement(CategoryTabs, null), /*#__PURE__*/React.createElement(CatalogSection, null), /*#__PURE__*/React.createElement(InstagramFeedSection, null)) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CategoryTabs, null), /*#__PURE__*/React.createElement(CatalogSection, null))), /*#__PURE__*/React.createElement(Footer, null), /*#__PURE__*/React.createElement(QuickViewModal, null), /*#__PURE__*/React.createElement(CartDrawer, null), /*#__PURE__*/React.createElement(CheckoutModal, null), /*#__PURE__*/React.createElement(WishlistModal, null), /*#__PURE__*/React.createElement(SizeGuideModal, null), /*#__PURE__*/React.createElement(WholesaleModal, null), /*#__PURE__*/React.createElement(LegalModal, null), /*#__PURE__*/React.createElement(AdminModal, null), /*#__PURE__*/React.createElement(ToastContainer, null));
+  }, currentView === "home" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Hero, null), /*#__PURE__*/React.createElement(BenefitsBar, null), /*#__PURE__*/React.createElement(CategoryTabs, null), /*#__PURE__*/React.createElement(CatalogSection, null), /*#__PURE__*/React.createElement(InstagramFeedSection, null)) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CategoryTabs, null), /*#__PURE__*/React.createElement(CatalogSection, null))), /*#__PURE__*/React.createElement(Footer, null), /*#__PURE__*/React.createElement(QuickViewModal, null), /*#__PURE__*/React.createElement(CartDrawer, null), /*#__PURE__*/React.createElement(CheckoutModal, null), /*#__PURE__*/React.createElement(WishlistModal, null), /*#__PURE__*/React.createElement(SizeGuideModal, null), /*#__PURE__*/React.createElement(WholesaleModal, null), /*#__PURE__*/React.createElement(LegalModal, null), /*#__PURE__*/React.createElement(AdminModal, null), /*#__PURE__*/React.createElement(PaymentMethodsModal, null), /*#__PURE__*/React.createElement(SocialProofToast, null), /*#__PURE__*/React.createElement(ToastContainer, null));
 }
 
 // Componente Error Boundary para evitar pantallas en blanco
